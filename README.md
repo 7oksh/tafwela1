@@ -1,16 +1,21 @@
-# tafwela
+# TAFWELA 🚗⛽
 
-A new Flutter project.
+Smart Fuel Station Congestion Management System
 
-## Getting Started
+## 📌 Overview
+Fuel Finder is a mobile application that helps users locate nearby fuel stations and check real-time congestion status.
 
-This project is a starting point for a Flutter application.
+## 🚀 Features
+- GPS-based nearby station detection
+- Live congestion status (verified station staff)
+- Color-based crowd indicator
+- Google Maps navigation
+- Android & iOS support
 
-A few resources to get you started if this is your first Flutter project:
+## 🛠 Tech Stack
+- Flutter
+- Firebase
+- Google Maps API
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 🎯 Goal
+Reduce traffic congestion at fuel stations in Egypt.
