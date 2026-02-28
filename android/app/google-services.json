@@ -1,0 +1,28 @@
+{
+ "project_info": {
+ "project_number": "356190995939",
+ "project_id": "tafwela-d1e72",
+"storage_bucket": "tafwela-d1e72.firebasestorage.app"
+},
+ "client": [
+{
+ "client_info": {
+"mobilesdk_app_id": "1:356190995939:android:30ecb209ee8de7f886ccd6",
+ "android_client_info": {
+"package_name": "com.example.tafwela"
+}
+},
+ "oauth_client": [],
+ "api_key": [
+ {
+"current_key": "AIzaSyCSDJzhw6CnII4cihksmQ3dKh0wMLdIlmY"
+ }
+],
+"services": {
+"appinvite_service": {
+ "other_platform_oauth_client": []
+}
+ }
+  ],
+"configuration_version": "1"
+}

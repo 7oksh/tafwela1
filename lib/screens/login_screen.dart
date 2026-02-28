@@ -19,6 +19,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  // اسم المستخدم الذي يظهر في التطبيق (Hello فلان)
+  final _displayNameController = TextEditingController();
   bool _isRegister = false; // للمستخدم: إنشاء حساب جديد أو دخول
   bool _loading = false;
   String? _errorMessage;
@@ -27,6 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
+    _displayNameController.dispose();
     super.dispose();
   }
 
@@ -39,6 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final auth = AuthService();
     final emailOrUsername = _usernameController.text.trim();
     final password = _passwordController.text;
+    final displayName = _displayNameController.text.trim();
 
     if (widget.isEmployee) {
       final user = await auth.loginEmployee(emailOrUsername, password);
@@ -54,11 +58,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       if (_isRegister) {
-        final error = await auth.registerUser(emailOrUsername, password);
+        final error = await auth.registerUser(emailOrUsername, password, displayName);
         setState(() => _loading = false);
         if (!mounted) return;
         if (error == null) {
-          _navigateAfterLogin(emailOrUsername, UserRole.user, null);
+          _navigateAfterLogin(displayName, UserRole.user, null);
         } else {
           setState(() => _errorMessage = error);
         }
@@ -134,6 +138,28 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (!widget.isEmployee && _isRegister) ...[
+                      TextFormField(
+                        controller: _displayNameController,
+                        decoration: const InputDecoration(
+                          labelText: 'اسم المستخدم ',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.badge),
+                        ),
+                        textInputAction: TextInputAction.next,
+                        validator: (v) {
+                          if (!_isRegister) return null;
+                          if (v == null || v.trim().isEmpty) {
+                            return 'أدخل اسم المستخدم ';
+                          }
+                          if (v.trim().length < 3) {
+                            return 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                     TextFormField(
                       controller: _usernameController,
                       decoration: InputDecoration(
@@ -161,16 +187,36 @@ class _LoginScreenState extends State<LoginScreen> {
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.lock),
                       ),
+                      onChanged: (_) {
+                        if (!widget.isEmployee && _isRegister) {
+                          setState(() {});
+                        }
+                      },
                       validator: (v) {
                         if (v == null || v.isEmpty) {
                           return 'أدخل كلمة المرور';
                         }
-                        if (!widget.isEmployee && _isRegister && v.length < 6) {
-                          return 'كلمة المرور 6 أحرف على الأقل';
+                        if (!widget.isEmployee && _isRegister) {
+                          final password = v;
+                          final hasUpper = password.contains(RegExp(r'[A-Z]'));
+                          final hasLetter = password.contains(RegExp(r'[A-Za-z]'));
+                          final hasDigit = password.contains(RegExp(r'\d'));
+                          final hasSymbol = password.contains(RegExp(r'[@#_\-\!\$\%\^\&\*\(\)\+\=\.\,\?\:;]'));
+                          if (password.length < 8 ||
+                              !hasLetter ||
+                              !hasDigit ||
+                              !hasUpper ||
+                              !hasSymbol) {
+                            return 'كلمة المرور يجب أن تكون 8 أحرف على الأقل وتحتوي على حرف كبير، حروف وأرقام، ورمز مثل @ أو # أو _.';
+                          }
                         }
                         return null;
                       },
                     ),
+                    if (!widget.isEmployee && _isRegister) ...[
+                      const SizedBox(height: 8),
+                      _PasswordRequirements(password: _passwordController.text),
+                    ],
                     if (_errorMessage != null) ...[
                       const SizedBox(height: 16),
                       Text(
@@ -185,6 +231,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           setState(() {
                             _isRegister = !_isRegister;
                             _errorMessage = null;
+                            _passwordController.clear();
+                            _displayNameController.clear();
                           });
                         },
                         child: Text(
@@ -220,6 +268,44 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _PasswordRequirements extends StatelessWidget {
+  final String password;
+
+  const _PasswordRequirements({required this.password});
+
+  @override
+  Widget build(BuildContext context) {
+    final hasUpper = password.contains(RegExp(r'[A-Z]'));
+    final hasLetter = password.contains(RegExp(r'[A-Za-z]'));
+    final hasDigit = password.contains(RegExp(r'\d'));
+    final hasSymbol = password.contains(RegExp(r'[@#_\-\!\$\%\^\&\*\(\)\+\=\.\,\?\:;]'));
+
+    Text _item(String text, bool ok) {
+      return Text(
+        '• $text',
+        style: TextStyle(
+          fontSize: 12,
+          color: ok ? Colors.green : Colors.red,
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'متطلبات كلمة المرور:',
+          style: TextStyle(fontSize: 12, color: Colors.red),
+        ),
+        _item('8 أحرف على الأقل', password.length >= 8),
+        _item('تحتوي على حروف وأرقام', hasLetter && hasDigit),
+        _item('تحتوي على حرف كبير واحد على الأقل (A-Z)', hasUpper),
+        _item('تحتوي على رمز مثل @ أو # أو _', hasSymbol),
+      ],
     );
   }
 }
