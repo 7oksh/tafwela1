@@ -26,12 +26,12 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'PLACEHOLDER_WEB_API_KEY',
-    appId: '1:000000000000:web:0000000000000000000000',
-    messagingSenderId: '000000000000',
-    projectId: 'tafwela',
-    authDomain: 'tafwela.firebaseapp.com',
-    storageBucket: 'tafwela.appspot.com',
+    apiKey: 'AIzaSyBx0ALde7E5Y5vlv4mFd3kyV05yLNcv158',
+    appId: '1:356190995939:web:edd08a430529758786ccd6',
+    messagingSenderId: '356190995939',
+    projectId: 'tafwela-d1e72',
+    authDomain: 'tafwela-d1e72.firebaseapp.com',
+    storageBucket: 'tafwela-d1e72.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(

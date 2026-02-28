@@ -95,10 +95,25 @@ class AuthService {
         }
         final m = e.message?.trim() ?? '';
         if (m.isEmpty || m.toLowerCase() == 'error' || m.toLowerCase().startsWith('an error occurred')) {
-          return 'حدث خطأ (كود: ${e.code}). ';
+          return 'حدث خطأ (كود: ${e.code}). تحقق من تفعيل البريد في Firebase وحاول مرة أخرى.';
         }
         return m;
     }
+  }
+
+  /// التحقق من قوة كلمة المرور عند إنشاء حساب جديد
+  static String? _passwordComplexityError(String password) {
+    if (password.length < 8) {
+      return 'كلمة المرور يجب أن تكون 8 أحرف على الأقل وتحتوي على حرف كبير، حروف وأرقام، ورمز مثل @ أو # أو _.';
+    }
+    final hasUpper = password.contains(RegExp(r'[A-Z]'));
+    final hasLetter = password.contains(RegExp(r'[A-Za-z]'));
+    final hasDigit = password.contains(RegExp(r'\d'));
+    final hasSymbol = password.contains(RegExp(r'[@#_\-\!\$\%\^\&\*\(\)\+\=\.\,\?\:;]'));
+    if (!hasLetter || !hasDigit || !hasUpper || !hasSymbol) {
+      return 'كلمة المرور يجب أن تحتوي على حرف كبير، حروف وأرقام، ورمز مثل @ أو # أو _.';
+    }
+    return null;
   }
 
   /// تسجيل دخول المستخدم العادي عبر Firebase (بريد إلكتروني + كلمة مرور)
@@ -113,7 +128,7 @@ class AuthService {
       final user = cred.user;
       if (user == null) return 'حدث خطأ. حاول مرة أخرى.';
       final stored = StoredUser(
-        username: user.email ?? email.trim(),
+        username: user.displayName ?? user.email ?? email.trim(),
         role: UserRole.user,
       );
       await _saveUser(stored);
@@ -134,9 +149,12 @@ class AuthService {
 
   /// إنشاء حساب مستخدم جديد عبر Firebase
   /// يُرجع null عند النجاح، أو رسالة الخطأ عند الفشل.
-  Future<String?> registerUser(String email, String password) async {
-    if (email.trim().isEmpty || password.isEmpty) return 'أدخل البريد وكلمة المرور';
-    if (password.length < 6) return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل.';
+  Future<String?> registerUser(String email, String password, String username) async {
+    if (email.trim().isEmpty || password.isEmpty || username.trim().isEmpty) {
+      return 'أدخل البريد واسم المستخدم وكلمة المرور';
+    }
+    final complexityError = _passwordComplexityError(password);
+    if (complexityError != null) return complexityError;
     try {
       final cred = await _auth.createUserWithEmailAndPassword(
         email: email.trim(),
@@ -144,8 +162,9 @@ class AuthService {
       );
       final user = cred.user;
       if (user == null) return 'حدث خطأ. حاول مرة أخرى.';
+      await user.updateDisplayName(username.trim());
       final stored = StoredUser(
-        username: user.email ?? email.trim(),
+        username: username.trim(),
         role: UserRole.user,
       );
       await _saveUser(stored);

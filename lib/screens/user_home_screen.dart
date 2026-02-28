@@ -8,6 +8,7 @@ import '../services/location_service.dart';
 import '../widgets/station_card.dart';
 import '../widgets/station_map_widget.dart';
 import '../widgets/dark_mode_button.dart';
+import 'station_details_screen.dart';
 
 /// شاشة المستخدم الرئيسية - الخريطة والقائمة
 class UserHomeScreen extends StatefulWidget {
@@ -202,16 +203,12 @@ class _UserHomeScreenState extends State<UserHomeScreen>
     );
   }
 
-  Future<void> _openMapsForStation(Station station) async {
-    final uri = Uri.parse(
-      'https://www.google.com/maps/search/?api=1&query=${station.latitude},${station.longitude}',
+  void _openStationDetails(Station station) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => StationDetailsScreen(station: station),
+      ),
     );
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تعذر فتح Google Maps')),
-      );
-    }
   }
 
   Future<void> _openGoogleMapsNearby() async {
@@ -303,7 +300,7 @@ class _UserHomeScreenState extends State<UserHomeScreen>
           child: StationsMapWidget(
             stations: _filteredStations,
             userPosition: _userPosition,
-            onStationTap: _openMapsForStation,
+            onStationTap: _openStationDetails,
           ),
         ),
       ],
@@ -479,7 +476,7 @@ class _UserHomeScreenState extends State<UserHomeScreen>
                 return StationCard(
                   key: ValueKey(station.id), // تحسين الأداء
                   station: station,
-                  onTap: () => _openMapsForStation(station),
+                  onTap: () => _openStationDetails(station),
                 );
               },
             ),

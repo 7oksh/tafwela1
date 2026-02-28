@@ -33,6 +33,8 @@ class Station {
         return 0xFFFFA726; // برتقالي
       case CrowdStatus.quiet:
         return 0xFF66BB6A; // أخضر
+      case CrowdStatus.noFuel:
+        return 0xFF757575; // رمادي غامق
       default:
         return 0xFF9E9E9E; // رمادي
     }
@@ -47,6 +49,8 @@ class Station {
         return '🟠';
       case CrowdStatus.quiet:
         return '🟢';
+      case CrowdStatus.noFuel:
+        return '🚫';
       default:
         return '⚪';
     }

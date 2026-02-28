@@ -5,6 +5,7 @@ enum CrowdStatus {
   crowded,  // مزدحم
   medium,   // متوسط
   quiet,    // هادئ
+  noFuel,   // لا يوجد بنزين
 }
 
 extension CrowdStatusX on CrowdStatus {
@@ -13,6 +14,7 @@ extension CrowdStatusX on CrowdStatus {
       case CrowdStatus.crowded: return 'مزدحم';
       case CrowdStatus.medium: return 'متوسط';
       case CrowdStatus.quiet: return 'هادئ';
+      case CrowdStatus.noFuel: return 'لا يوجد بنزين';
     }
   }
 
@@ -37,6 +39,7 @@ class StationStatusService {
       case 'crowded': return CrowdStatus.crowded;
       case 'medium': return CrowdStatus.medium;
       case 'quiet': return CrowdStatus.quiet;
+      case 'noFuel': return CrowdStatus.noFuel;
       default: return null;
     }
   }
