@@ -88,6 +88,7 @@ class _UserHomeScreenState extends State<UserHomeScreen>
           );
           return s.copyWith(distanceKm: distanceMeters / 1000.0);
         })
+            .where((s) => s.distanceKm != null && s.distanceKm! <= 20.0)
             .toList()
           ..sort((a, b) {
             final da = a.distanceKm ?? double.infinity;
