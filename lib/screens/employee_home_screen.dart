@@ -320,6 +320,7 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
       case CrowdStatus.quiet: return Colors.green;
       case CrowdStatus.medium: return Colors.orange;
       case CrowdStatus.crowded: return Colors.red;
+      case CrowdStatus.noFuel: return Colors.grey.shade700;
     }
   }
 }

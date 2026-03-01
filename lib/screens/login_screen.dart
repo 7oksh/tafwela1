@@ -23,6 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _displayNameController = TextEditingController();
   bool _isRegister = false; // للمستخدم: إنشاء حساب جديد أو دخول
   bool _loading = false;
+  bool _obscurePassword = true;
   String? _errorMessage;
 
   @override
@@ -181,11 +182,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
+                      obscureText: _obscurePassword,
+                      decoration: InputDecoration(
                         labelText: 'كلمة المرور',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.lock),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.lock),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
                       ),
                       onChanged: (_) {
                         if (!widget.isEmployee && _isRegister) {
