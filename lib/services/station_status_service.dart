@@ -31,7 +31,23 @@ class StationStatusService {
     await prefs.setString(_timeKey(stationId), DateTime.now().toIso8601String());
   }
 
+  Future<void> clearStatus(String stationId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_statusKey(stationId));
+    await prefs.remove(_timeKey(stationId));
+  }
+
   Future<CrowdStatus?> getStatus(String stationId) async {
+    final lastUpdate = await getLastUpdate(stationId);
+    if (lastUpdate == null) return null;
+
+    // Check if the update is older than 4 hours
+    final diff = DateTime.now().difference(lastUpdate);
+    if (diff.inHours >= 4) {
+      await clearStatus(stationId);
+      return null;
+    }
+
     final prefs = await SharedPreferences.getInstance();
     final v = prefs.getString(_statusKey(stationId));
     if (v == null) return null;

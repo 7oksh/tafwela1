@@ -18,12 +18,10 @@ class UserHomeScreen extends StatefulWidget {
   State<UserHomeScreen> createState() => _UserHomeScreenState();
 }
 
-class _UserHomeScreenState extends State<UserHomeScreen>
-    with SingleTickerProviderStateMixin {
+class _UserHomeScreenState extends State<UserHomeScreen> {
   final StationsService _stationsService = StationsService();
   final LocationService _locationService = LocationService();
   final TextEditingController _searchController = TextEditingController();
-  late TabController _tabController;
 
   List<Station> _allStations = [];
   List<Station> _filteredStations = [];
@@ -36,22 +34,11 @@ class _UserHomeScreenState extends State<UserHomeScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(_onTabChanged);
     _loadStations();
-  }
-
-  void _onTabChanged() {
-    // تحديث الخريطة عند التبديل للتاب الخاص بها
-    if (_tabController.index == 1 && mounted) {
-      setState(() {}); // إعادة بناء الخريطة
-    }
   }
 
   @override
   void dispose() {
-    _tabController.removeListener(_onTabChanged);
-    _tabController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -241,23 +228,8 @@ class _UserHomeScreenState extends State<UserHomeScreen>
             ),
             const DarkModeButton(),
           ],
-          bottom: TabBar(
-            controller: _tabController,
-            tabs: const [
-              Tab(icon: Icon(Icons.list), text: 'القائمة'),
-              Tab(icon: Icon(Icons.map), text: 'الخريطة'),
-            ],
-          ),
         ),
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            // تبويب القائمة (الأساسي)
-            _buildListTab(),
-            // تبويب الخريطة
-            _buildMapTab(),
-          ],
-        ),
+        body: _buildListTab(),
       ),
     );
   }

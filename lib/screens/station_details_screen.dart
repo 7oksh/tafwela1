@@ -27,7 +27,14 @@ class _StationDetailsScreenState extends State<StationDetailsScreen> {
 
   Future<void> _updateStatus(CrowdStatus status) async {
     setState(() => _isUpdating = true);
-    await _statusService.setStatus(_currentStation.id, status);
+
+    // Toggle logic: if already selected, remove it.
+    if (_currentStation.status == status) {
+      await _statusService.clearStatus(_currentStation.id);
+    } else {
+      await _statusService.setStatus(_currentStation.id, status);
+    }
+
     final newStatus = await _statusService.getStatus(_currentStation.id);
     final lastUpdate = await _statusService.getLastUpdate(_currentStation.id);
     if (mounted) {
@@ -55,7 +62,7 @@ class _StationDetailsScreenState extends State<StationDetailsScreen> {
     }
 
     if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
+      await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
     } else {
       // Fallback to https if native app call fails
       final httpsUri = Uri.parse(
