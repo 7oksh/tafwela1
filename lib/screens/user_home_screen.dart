@@ -124,8 +124,9 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
         if (!nameMatch && !addressMatch) continue;
       }
 
-      // فلترة حسب حالة الازدحام
-      if (_selectedFilter != null && station.status != _selectedFilter) {
+      // فلترة حسب حالة الازدحام (نستخدم حالة الموظف كأولوية أو حالة العميل)
+      final currentStatus = station.employeeStatus ?? station.customerStatus;
+      if (_selectedFilter != null && currentStatus != _selectedFilter) {
         continue;
       }
 
@@ -221,6 +222,11 @@ class _UserHomeScreenState extends State<UserHomeScreen> {
           title: const Text('محطات البنزين'),
           centerTitle: true,
           actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _isLoading ? null : () => _loadStations(forceRefreshFromNetwork: true),
+              tooltip: 'تحديث',
+            ),
             IconButton(
               icon: const Icon(Icons.map),
               tooltip: 'فتح Google Maps',

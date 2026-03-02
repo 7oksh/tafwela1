@@ -29,19 +29,29 @@ class _StationDetailsScreenState extends State<StationDetailsScreen> {
     setState(() => _isUpdating = true);
 
     // Toggle logic: if already selected, remove it.
-    if (_currentStation.status == status) {
-      await _statusService.clearStatus(_currentStation.id);
+    if (_currentStation.customerStatus == status) {
+      await _statusService.clearStatus(_currentStation.id, 'customer');
     } else {
-      await _statusService.setStatus(_currentStation.id, status);
+      await _statusService.setStatus(_currentStation.id, status, 'customer');
     }
 
-    final newStatus = await _statusService.getStatus(_currentStation.id);
-    final lastUpdate = await _statusService.getLastUpdate(_currentStation.id);
+    await _refresh();
+  }
+
+  Future<void> _refresh() async {
+    setState(() => _isUpdating = true);
+    final cStatus = await _statusService.getStatus(_currentStation.id, 'customer');
+    final cUpdate = await _statusService.getLastUpdate(_currentStation.id, 'customer');
+    final eStatus = await _statusService.getStatus(_currentStation.id, 'employee');
+    final eUpdate = await _statusService.getLastUpdate(_currentStation.id, 'employee');
+
     if (mounted) {
       setState(() {
         _currentStation = _currentStation.copyWith(
-          status: newStatus,
-          lastUpdate: lastUpdate,
+          customerStatus: cStatus,
+          customerLastUpdate: cUpdate,
+          employeeStatus: eStatus,
+          employeeLastUpdate: eUpdate,
         );
         _isUpdating = false;
       });
@@ -102,7 +112,14 @@ class _StationDetailsScreenState extends State<StationDetailsScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(_currentStation.name),
-          actions: const [DarkModeButton()],
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: _isUpdating ? null : _refresh,
+              tooltip: 'تحديث',
+            ),
+            const DarkModeButton(),
+          ],
         ),
         body: SingleChildScrollView(
           child: Column(
@@ -163,22 +180,64 @@ class _StationDetailsScreenState extends State<StationDetailsScreen> {
                                   Text('الحالة الحالية', style: theme.textTheme.titleSmall),
                                   const SizedBox(height: 4),
                                   Text(
-                                    _currentStation.status?.label ?? 'غير معروفة',
+                                    _currentStation.customerStatus?.label ?? 'غير معروفة',
                                     style: theme.textTheme.titleLarge?.copyWith(
-                                      color: Color(_currentStation.statusColor),
+                                      color: Color(_currentStation.colorForStatus(_currentStation.customerStatus)),
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    'آخر تحديث: ${_formatTime(_currentStation.lastUpdate)}',
+                                    'آخر تحديث: ${_formatTime(_currentStation.customerLastUpdate)}',
                                     style: theme.textTheme.bodySmall,
                                   ),
                                 ],
                               ),
                             ),
                             Text(
-                              _currentStation.statusIcon,
+                              _currentStation.iconForStatus(_currentStation.customerStatus),
+                              style: const TextStyle(fontSize: 40),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+                    // Employee Status Card
+                    Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(color: theme.dividerColor),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('موظف المحطة', style: theme.textTheme.titleSmall),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _currentStation.employeeStatus?.label ?? 'غير متوفرة',
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      color: Color(_currentStation.colorForStatus(_currentStation.employeeStatus)),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'آخر تحديث: ${_formatTime(_currentStation.employeeLastUpdate)}',
+                                    style: theme.textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Text(
+                              _currentStation.iconForStatus(_currentStation.employeeStatus),
                               style: const TextStyle(fontSize: 40),
                             ),
                           ],
@@ -251,7 +310,7 @@ class _StationDetailsScreenState extends State<StationDetailsScreen> {
   }
 
   Widget _statusButton(CrowdStatus status, Color color) {
-    final isSelected = _currentStation.status == status;
+    final isSelected = _currentStation.customerStatus == status;
     return InkWell(
       onTap: _isUpdating ? null : () => _updateStatus(status),
       child: Container(

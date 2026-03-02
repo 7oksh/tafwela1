@@ -204,9 +204,17 @@ out body 2000;
   Future<List<Station>> _withStatus(List<Station> stations) async {
     final result = <Station>[];
     for (final s in stations) {
-      final status = await _statusService.getStatus(s.id);
-      final lastUpdate = await _statusService.getLastUpdate(s.id);
-      result.add(s.copyWith(status: status, lastUpdate: lastUpdate));
+      final cStatus = await _statusService.getStatus(s.id, 'customer');
+      final cUpdate = await _statusService.getLastUpdate(s.id, 'customer');
+      final eStatus = await _statusService.getStatus(s.id, 'employee');
+      final eUpdate = await _statusService.getLastUpdate(s.id, 'employee');
+
+      result.add(s.copyWith(
+        customerStatus: cStatus,
+        customerLastUpdate: cUpdate,
+        employeeStatus: eStatus,
+        employeeLastUpdate: eUpdate,
+      ));
     }
     return result;
   }
@@ -242,13 +250,7 @@ out body 2000;
   Future<List<Station>> refreshStationsFromNetwork() async {
     final stations = await _fetchFromOverpass();
     if (stations.isNotEmpty) await _setCachedStations(stations);
-    final result = <Station>[];
-    for (final s in stations) {
-      final status = await _statusService.getStatus(s.id);
-      final lastUpdate = await _statusService.getLastUpdate(s.id);
-      result.add(s.copyWith(status: status, lastUpdate: lastUpdate));
-    }
-    return result;
+    return _withStatus(stations);
   }
 
   Future<Station?> getStationById(String id) async {
@@ -273,6 +275,9 @@ out body 2000;
   Future<List<Station>> filterByStatus(CrowdStatus? status) async {
     final allStations = await getAllStations();
     if (status == null) return allStations;
-    return allStations.where((s) => s.status == status).toList();
+    return allStations.where((s) {
+      final currentStatus = s.employeeStatus ?? s.customerStatus;
+      return currentStatus == status;
+    }).toList();
   }
 }

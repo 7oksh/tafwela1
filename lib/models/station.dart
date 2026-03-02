@@ -9,8 +9,14 @@ class Station {
   final double longitude;
   final List<String> services; // الخدمات المتاحة (مثل: بنزين 95، ديزل، غسيل سيارات)
   final double? distanceKm; // المسافة بالكيلومتر من موقع المستخدم (اختياري)
-  CrowdStatus? status; // حالة الازدحام (يمكن أن تكون null إذا لم يتم التحديث)
-  DateTime? lastUpdate; // آخر تحديث للحالة
+
+  // تقييم العملاء
+  CrowdStatus? customerStatus;
+  DateTime? customerLastUpdate;
+
+  // حالة موظف المحطة
+  CrowdStatus? employeeStatus;
+  DateTime? employeeLastUpdate;
 
   Station({
     required this.id,
@@ -20,13 +26,15 @@ class Station {
     required this.longitude,
     this.services = const [],
     this.distanceKm,
-    this.status,
-    this.lastUpdate,
+    this.customerStatus,
+    this.customerLastUpdate,
+    this.employeeStatus,
+    this.employeeLastUpdate,
   });
 
-  /// الحصول على لون الحالة
-  int get statusColor {
-    switch (status) {
+  /// الحصول على لون حالة معينة
+  int colorForStatus(CrowdStatus? s) {
+    switch (s) {
       case CrowdStatus.crowded:
         return 0xFFFF5252; // أحمر
       case CrowdStatus.medium:
@@ -40,9 +48,9 @@ class Station {
     }
   }
 
-  /// الحصول على أيقونة الحالة
-  String get statusIcon {
-    switch (status) {
+  /// الحصول على أيقونة حالة معينة
+  String iconForStatus(CrowdStatus? s) {
+    switch (s) {
       case CrowdStatus.crowded:
         return '🔴';
       case CrowdStatus.medium:
@@ -65,8 +73,10 @@ class Station {
     double? longitude,
     List<String>? services,
     double? distanceKm,
-    CrowdStatus? status,
-    DateTime? lastUpdate,
+    CrowdStatus? customerStatus,
+    DateTime? customerLastUpdate,
+    CrowdStatus? employeeStatus,
+    DateTime? employeeLastUpdate,
   }) {
     return Station(
       id: id ?? this.id,
@@ -76,8 +86,10 @@ class Station {
       longitude: longitude ?? this.longitude,
       services: services ?? this.services,
       distanceKm: distanceKm ?? this.distanceKm,
-      status: status ?? this.status,
-      lastUpdate: lastUpdate ?? this.lastUpdate,
+      customerStatus: customerStatus ?? this.customerStatus,
+      customerLastUpdate: customerLastUpdate ?? this.customerLastUpdate,
+      employeeStatus: employeeStatus ?? this.employeeStatus,
+      employeeLastUpdate: employeeLastUpdate ?? this.employeeLastUpdate,
     );
   }
 }

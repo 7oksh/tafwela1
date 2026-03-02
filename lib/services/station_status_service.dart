@@ -22,34 +22,34 @@ extension CrowdStatusX on CrowdStatus {
 }
 
 class StationStatusService {
-  static String _statusKey(String stationId) => 'station_${stationId}_status';
-  static String _timeKey(String stationId) => 'station_${stationId}_lastUpdate';
+  static String _statusKey(String stationId, String role) => 'station_${stationId}_${role}_status';
+  static String _timeKey(String stationId, String role) => 'station_${stationId}_${role}_lastUpdate';
 
-  Future<void> setStatus(String stationId, CrowdStatus status) async {
+  Future<void> setStatus(String stationId, CrowdStatus status, String role) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_statusKey(stationId), status.value);
-    await prefs.setString(_timeKey(stationId), DateTime.now().toIso8601String());
+    await prefs.setString(_statusKey(stationId, role), status.value);
+    await prefs.setString(_timeKey(stationId, role), DateTime.now().toIso8601String());
   }
 
-  Future<void> clearStatus(String stationId) async {
+  Future<void> clearStatus(String stationId, String role) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_statusKey(stationId));
-    await prefs.remove(_timeKey(stationId));
+    await prefs.remove(_statusKey(stationId, role));
+    await prefs.remove(_timeKey(stationId, role));
   }
 
-  Future<CrowdStatus?> getStatus(String stationId) async {
-    final lastUpdate = await getLastUpdate(stationId);
+  Future<CrowdStatus?> getStatus(String stationId, String role) async {
+    final lastUpdate = await getLastUpdate(stationId, role);
     if (lastUpdate == null) return null;
 
     // Check if the update is older than 4 hours
     final diff = DateTime.now().difference(lastUpdate);
     if (diff.inHours >= 4) {
-      await clearStatus(stationId);
+      await clearStatus(stationId, role);
       return null;
     }
 
     final prefs = await SharedPreferences.getInstance();
-    final v = prefs.getString(_statusKey(stationId));
+    final v = prefs.getString(_statusKey(stationId, role));
     if (v == null) return null;
     switch (v) {
       case 'crowded': return CrowdStatus.crowded;
@@ -60,9 +60,9 @@ class StationStatusService {
     }
   }
 
-  Future<DateTime?> getLastUpdate(String stationId) async {
+  Future<DateTime?> getLastUpdate(String stationId, String role) async {
     final prefs = await SharedPreferences.getInstance();
-    final v = prefs.getString(_timeKey(stationId));
+    final v = prefs.getString(_timeKey(stationId, role));
     if (v == null) return null;
     return DateTime.tryParse(v);
   }

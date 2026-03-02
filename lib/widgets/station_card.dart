@@ -46,71 +46,20 @@ class StationCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // اسم المحطة والحالة
+              // اسم المحطة
+              Text(
+                station.name,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              // الحالات: العملاء والموظف
               Row(
                 children: [
-                  Expanded(
-                    child: Text(
-                      station.name,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  if (station.status != null) ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Color(station.statusColor).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Color(station.statusColor),
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            station.statusIcon,
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            station.status!.label,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: Color(station.statusColor),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ] else ...[
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.grey,
-                          width: 1.5,
-                        ),
-                      ),
-                      child: Text(
-                        'غير محدّث',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ),
-                  ],
+                  Expanded(child: _buildStatusBadge(context, 'تقييم العملاء', station.customerStatus, 'customer')),
+                  const SizedBox(width: 8),
+                  Expanded(child: _buildStatusBadge(context, 'موظف المحطة', station.employeeStatus, 'employee')),
                 ],
               ),
               const SizedBox(height: 8),
@@ -175,21 +124,65 @@ class StationCard extends StatelessWidget {
                   }).toList(),
                 ),
               ],
-              // وقت آخر تحديث
-              if (station.lastUpdate != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  'آخر تحديث: ${_formatTime(station.lastUpdate)}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    fontSize: 11,
-                  ),
-                ),
-              ],
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildStatusBadge(BuildContext context, String label, CrowdStatus? status, String role) {
+    final theme = Theme.of(context);
+    final color = Color(station.colorForStatus(status));
+    final icon = station.iconForStatus(status);
+    final lastUpdate = role == 'customer' ? station.customerLastUpdate : station.employeeLastUpdate;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: color, width: 1),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(icon, style: const TextStyle(fontSize: 12)),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  status?.label ?? 'غير محدّث',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 10,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (lastUpdate != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 2, right: 2),
+            child: Text(
+              _formatTime(lastUpdate),
+              style: theme.textTheme.labelSmall?.copyWith(fontSize: 9, color: theme.colorScheme.onSurfaceVariant),
+            ),
+          ),
+      ],
     );
   }
 }
