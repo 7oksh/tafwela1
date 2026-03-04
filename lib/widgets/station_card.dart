@@ -136,6 +136,7 @@ class StationCard extends StatelessWidget {
     final color = Color(station.colorForStatus(status));
     final icon = station.iconForStatus(status);
     final lastUpdate = role == 'customer' ? station.customerLastUpdate : station.employeeLastUpdate;
+    final isMajority = role == 'customer' && status != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,6 +172,10 @@ class StationCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              if (isMajority) ...[
+                const SizedBox(width: 4),
+                Icon(Icons.people, size: 10, color: color),
+              ],
             ],
           ),
         ),

@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// حالة الازدحام في المحطة
@@ -22,34 +24,119 @@ extension CrowdStatusX on CrowdStatus {
 }
 
 class StationStatusService {
-  static String _statusKey(String stationId, String role) => 'station_${stationId}_${role}_status';
-  static String _timeKey(String stationId, String role) => 'station_${stationId}_${role}_lastUpdate';
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  static const _expireHours = 4;
 
   Future<void> setStatus(String stationId, CrowdStatus status, String role) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_statusKey(stationId, role), status.value);
-    await prefs.setString(_timeKey(stationId, role), DateTime.now().toIso8601String());
+    if (role == 'employee') {
+      await _db.collection('stations').doc(stationId).set({
+        'employeeStatus': status.value,
+        'employeeLastUpdate': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } else {
+      final user = _auth.currentUser;
+      if (user == null) return;
+
+      await _db
+          .collection('stations')
+          .doc(stationId)
+          .collection('reports')
+          .doc(user.uid)
+          .set({
+        'status': status.value,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    }
   }
 
   Future<void> clearStatus(String stationId, String role) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_statusKey(stationId, role));
-    await prefs.remove(_timeKey(stationId, role));
+    if (role == 'employee') {
+      await _db.collection('stations').doc(stationId).set({
+        'employeeStatus': null,
+        'employeeLastUpdate': null,
+      }, SetOptions(merge: true));
+    } else {
+      final user = _auth.currentUser;
+      if (user == null) return;
+
+      await _db
+          .collection('stations')
+          .doc(stationId)
+          .collection('reports')
+          .doc(user.uid)
+          .delete();
+    }
   }
 
   Future<CrowdStatus?> getStatus(String stationId, String role) async {
-    final lastUpdate = await getLastUpdate(stationId, role);
-    if (lastUpdate == null) return null;
+    if (role == 'employee') {
+      final doc = await _db.collection('stations').doc(stationId).get();
+      if (!doc.exists) return null;
 
-    // Check if the update is older than 4 hours
-    final diff = DateTime.now().difference(lastUpdate);
-    if (diff.inHours >= 4) {
-      await clearStatus(stationId, role);
-      return null;
+      final data = doc.data()!;
+      final ts = data['employeeLastUpdate'] as Timestamp?;
+      if (ts == null) return null;
+
+      if (DateTime.now().difference(ts.toDate()).inHours >= _expireHours) {
+        return null;
+      }
+
+      return _parseStatus(data['employeeStatus'] as String?);
+    } else {
+      // Majority Logic
+      final now = DateTime.now();
+      final threshold = now.subtract(const Duration(hours: _expireHours));
+
+      final snapshot = await _db
+          .collection('stations')
+          .doc(stationId)
+          .collection('reports')
+          .where('timestamp', isGreaterThan: threshold)
+          .get();
+
+      if (snapshot.docs.isEmpty) return null;
+
+      final counts = <String, int>{};
+      for (final doc in snapshot.docs) {
+        final s = doc.data()['status'] as String?;
+        if (s != null) counts[s] = (counts[s] ?? 0) + 1;
+      }
+
+      if (counts.isEmpty) return null;
+
+      final winner = counts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+      return _parseStatus(winner);
     }
+  }
 
-    final prefs = await SharedPreferences.getInstance();
-    final v = prefs.getString(_statusKey(stationId, role));
+  Future<DateTime?> getLastUpdate(String stationId, String role) async {
+    if (role == 'employee') {
+      final doc = await _db.collection('stations').doc(stationId).get();
+      if (!doc.exists) return null;
+      final ts = doc.data()?['employeeLastUpdate'] as Timestamp?;
+      return ts?.toDate();
+    } else {
+      final now = DateTime.now();
+      final threshold = now.subtract(const Duration(hours: _expireHours));
+
+      final snapshot = await _db
+          .collection('stations')
+          .doc(stationId)
+          .collection('reports')
+          .where('timestamp', isGreaterThan: threshold)
+          .orderBy('timestamp', descending: true)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isEmpty) return null;
+      final ts = snapshot.docs.first.data()['timestamp'] as Timestamp?;
+      return ts?.toDate();
+    }
+  }
+
+  CrowdStatus? _parseStatus(String? v) {
     if (v == null) return null;
     switch (v) {
       case 'crowded': return CrowdStatus.crowded;
@@ -58,12 +145,5 @@ class StationStatusService {
       case 'noFuel': return CrowdStatus.noFuel;
       default: return null;
     }
-  }
-
-  Future<DateTime?> getLastUpdate(String stationId, String role) async {
-    final prefs = await SharedPreferences.getInstance();
-    final v = prefs.getString(_timeKey(stationId, role));
-    if (v == null) return null;
-    return DateTime.tryParse(v);
   }
 }
