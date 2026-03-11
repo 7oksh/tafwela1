@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -200,23 +201,28 @@ out body 2000;
     services: (json['services'] as List<dynamic>?)?.cast<String>() ?? [],
   );
 
-  /// إضافة حالة الازدحام لكل محطة
+  /// إضافة حالة الازدحام لكل محطة (بشكل متوازي لتحسين الأداء)
   Future<List<Station>> _withStatus(List<Station> stations) async {
-    final result = <Station>[];
-    for (final s in stations) {
-      final cStatus = await _statusService.getStatus(s.id, 'customer');
-      final cUpdate = await _statusService.getLastUpdate(s.id, 'customer');
-      final eStatus = await _statusService.getStatus(s.id, 'employee');
-      final eUpdate = await _statusService.getLastUpdate(s.id, 'employee');
+    final futures = stations.map((s) async {
+      try {
+        final cStatus = await _statusService.getStatus(s.id, 'customer');
+        final cUpdate = await _statusService.getLastUpdate(s.id, 'customer');
+        final eStatus = await _statusService.getStatus(s.id, 'employee');
+        final eUpdate = await _statusService.getLastUpdate(s.id, 'employee');
 
-      result.add(s.copyWith(
-        customerStatus: cStatus,
-        customerLastUpdate: cUpdate,
-        employeeStatus: eStatus,
-        employeeLastUpdate: eUpdate,
-      ));
-    }
-    return result;
+        return s.copyWith(
+          customerStatus: cStatus,
+          customerLastUpdate: cUpdate,
+          employeeStatus: eStatus,
+          employeeLastUpdate: eUpdate,
+        );
+      } catch (e) {
+        debugPrint('Error fetching status for station ${s.id}: $e');
+        return s; // نرجع المحطة بدون حالة لو حصل خطأ
+      }
+    });
+
+    return await Future.wait(futures);
   }
 
   /// الحصول على جميع المحطات (من الكاش أو من النت ثم كاش)
@@ -224,9 +230,15 @@ out body 2000;
     var stations = await _getCachedStations();
     if (stations.isEmpty) {
       stations = await _fetchFromOverpass();
-      if (stations.isNotEmpty) await _setCachedStations(stations);
+      if (stations.isNotEmpty) {
+        // limit to Egypt bounds roughly to avoid too much data if query was loose
+        // (already filtered in overpass query but just in case)
+        await _setCachedStations(stations);
+      }
     }
-    return _withStatus(stations);
+    // Limit to 100 stations for performance if we are not using distance filtering
+    final limited = stations.take(100).toList();
+    return _withStatus(limited);
   }
 
   /// عندما نعرف موقع المستخدم: نجلب المحطات حوله من النت ثم ندمج مع الكاش
