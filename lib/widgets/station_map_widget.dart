@@ -95,7 +95,8 @@ class _StationsMapWidgetState extends State<StationsMapWidget> {
 
     // إضافة علامات المحطات
     for (final station in widget.stations) {
-      final color = _getMarkerColor(station.status);
+      final currentStatus = station.employeeStatus ?? station.customerStatus;
+      final color = _getMarkerColor(currentStatus);
       markers.add(
         Marker(
           markerId: MarkerId(station.id),
@@ -103,8 +104,8 @@ class _StationsMapWidgetState extends State<StationsMapWidget> {
           icon: BitmapDescriptor.defaultMarkerWithHue(color),
           infoWindow: InfoWindow(
             title: station.name,
-            snippet: station.status != null
-                ? '${station.status!.label}${station.distanceKm != null ? ' • ${station.distanceKm!.toStringAsFixed(1)} كم' : ''}'
+            snippet: currentStatus != null
+                ? '${currentStatus.label}${station.distanceKm != null ? ' • ${station.distanceKm!.toStringAsFixed(1)} كم' : ''}'
                 : station.address,
           ),
           onTap: () {

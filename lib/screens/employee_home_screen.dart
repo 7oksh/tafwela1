@@ -129,8 +129,8 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
       return;
     }
     final sid = user.stationId!;
-    final status = await _statusService.getStatus(sid);
-    final lastUpdate = await _statusService.getLastUpdate(sid);
+    final status = await _statusService.getStatus(sid, 'employee');
+    final lastUpdate = await _statusService.getLastUpdate(sid, 'employee');
     if (mounted) {
       setState(() {
         _stationId = sid;
@@ -144,7 +144,7 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
 
   Future<void> _updateStatus(CrowdStatus status) async {
     if (_stationId == null) return;
-    await _statusService.setStatus(_stationId!, status);
+    await _statusService.setStatus(_stationId!, status, 'employee');
     await _load();
   }
 
@@ -306,6 +306,14 @@ class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
                   color: Colors.red,
                   isSelected: _currentStatus == CrowdStatus.crowded,
                   onTap: () => _updateStatus(CrowdStatus.crowded),
+                ),
+                const SizedBox(height: 12),
+                _StatusButton(
+                  label: 'لا يوجد بنزين',
+                  icon: Icons.block,
+                  color: Colors.grey.shade700,
+                  isSelected: _currentStatus == CrowdStatus.noFuel,
+                  onTap: () => _updateStatus(CrowdStatus.noFuel),
                 ),
               ],
             ),
