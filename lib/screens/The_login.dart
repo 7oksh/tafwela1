@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:new_version/screens/Customer_register.dart';
 import 'package:new_version/screens/Employee_register.dart';
+import 'package:new_version/screens/staff/main_screen.dart';
+import 'package:new_version/screens/staff/staff_home_screen.dart';
 
 
 class Login extends StatelessWidget {
@@ -167,6 +169,7 @@ class Login extends StatelessWidget {
                   onPressed: () {
                    // _passwordController.value;
                     //_emailController.value;
+                    Get.off(() =>  MainScreen());
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1A2A4A),
