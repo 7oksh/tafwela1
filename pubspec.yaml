@@ -42,10 +42,17 @@ dependencies:
   font_awesome_flutter: ^11.0.0
   dartx: ^1.2.0
   just_audio: ^0.10.5
+<<<<<<< HEAD
   google_fonts: ^6.3.2
   flutter_local_notifications: ^17.2.4
   image_picker: ^1.1.2
   shared_preferences: ^2.2.3
+=======
+  google_fonts: ^6.2.1
+  flutter_local_notifications: ^17.1.0
+  shared_preferences: ^2.2.2
+  image_picker: ^1.1.2
+>>>>>>> 5b23b68 (Add staff screens including profile, home, edit profile and change password)
   firebase_core: ^4.7.0
   cloud_firestore: ^6.3.0
   firebase_auth: ^6.4.0
@@ -79,6 +86,10 @@ flutter:
     - lib/assets/images/sc3.png
     - lib/assets/sounds/alert.mp3
     - lib/assets/images/profile.png
+<<<<<<< HEAD
+=======
+
+>>>>>>> 5b23b68 (Add staff screens including profile, home, edit profile and change password)
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

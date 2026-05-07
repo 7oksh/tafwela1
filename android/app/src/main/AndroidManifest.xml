@@ -1,4 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<<<<<<< HEAD
 
     <!-- Camera Permission -->
     <uses-permission android:name="android.permission.CAMERA"/>
@@ -9,6 +10,9 @@
     <!-- Notifications Permission -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
+=======
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+>>>>>>> 5b23b68 (Add staff screens including profile, home, edit profile and change password)
     <application
         android:label="Tafwela"
         android:name="${applicationName}"

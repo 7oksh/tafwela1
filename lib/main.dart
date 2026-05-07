@@ -10,7 +10,10 @@ import 'controllers/nav_controller.dart';
 import 'controllers/notification_controller.dart';
 import 'controllers/status_controller.dart';
 import 'controllers/timer_controller.dart';
+<<<<<<< HEAD
 import 'firebase_options.dart';
+=======
+>>>>>>> 5b23b68 (Add staff screens including profile, home, edit profile and change password)
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

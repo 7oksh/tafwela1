@@ -3,10 +3,14 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+<<<<<<< HEAD
   cloud_firestore
   file_selector_windows
   firebase_auth
   firebase_core
+=======
+  file_selector_windows
+>>>>>>> 5b23b68 (Add staff screens including profile, home, edit profile and change password)
   geolocator_windows
 )
 
