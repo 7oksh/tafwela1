@@ -1,18 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-<<<<<<< HEAD
 
-    <!-- Camera Permission -->
     <uses-permission android:name="android.permission.CAMERA"/>
-
-    <!-- Gallery Permission -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
-
-    <!-- Notifications Permission -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
-=======
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
->>>>>>> 5b23b68 (Add staff screens including profile, home, edit profile and change password)
     <application
         android:label="Tafwela"
         android:name="${applicationName}"
@@ -30,19 +21,15 @@
 
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
-                android:resource="@style/NormalTheme"
-                />
+                android:resource="@style/NormalTheme"/>
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
-
-                <category
-                    android:name="android.intent.category.LAUNCHER"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
 
         </activity>
 
-        <!-- Flutter -->
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
@@ -50,16 +37,10 @@
     </application>
 
     <queries>
-
         <intent>
-
-            <action
-                android:name="android.intent.action.PROCESS_TEXT"/>
-
-            <data
-                android:mimeType="text/plain"/>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
         </intent>
-
     </queries>
 
 </manifest>

@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:new_version/screens/splash_screen.dart';
-import 'package:new_version/screens/staff/main_screen.dart';
+
 import 'package:new_version/services/notification_service.dart';
 
+import 'controllers/AuthController.dart';
 import 'controllers/nav_controller.dart';
 import 'controllers/notification_controller.dart';
 import 'controllers/status_controller.dart';
@@ -21,7 +22,7 @@ Future<void> main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
    );
-  
+  Get.put(AuthController());
   Get.put(StatusController());
   Get.put(NotificationController());
   Get.put(TimerController());
