@@ -104,6 +104,7 @@ class AuthController extends GetxController {
         'phone': phone.trim(),
         'email': email.trim(),
         'stationName': stationName.trim(),
+        'staffId': credential.user!.uid,
         'role': 'staff',
         'status': 'pending',
         'createdAt': FieldValue.serverTimestamp(),

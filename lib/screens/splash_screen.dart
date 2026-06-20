@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
+import '../controllers/Map_controller.dart';
 import 'intro_screens.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -26,12 +27,14 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _initApp() async {
     await _getCurrentLocation();
-    await Future.delayed(const Duration(seconds: 5));
-    Get.off(
-        IntroductionScreens(),
-    );
-  }
 
+    if (_currentPosition != null) {
+      Get.find<MapController>().setPosition(_currentPosition!);
+    }
+
+    await Future.delayed(const Duration(seconds: 5));
+    Get.off(IntroductionScreens());
+  }
   Future<void> _getCurrentLocation() async {
     try {
 
