@@ -40,34 +40,19 @@ class Login extends StatelessWidget {
               SizedBox(height: screenHeight * 0.06),
 
               Center(
-                child: Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0F4FF),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFFDDE3F0)),
-                  ),
-                  child: const Icon(
-                    Icons.local_gas_station,
-                    color: Color(0xFF1A2A4A),
-                    size: 32,
+                child:SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.5,
+                  height: MediaQuery.of(context).size.width * 0.2, // 👈 صغّر الارتفاع
+                  child: Image.asset(
+                    'lib/assets/images/logo_blue.png',
+                    fit: BoxFit.contain,
                   ),
                 ),
               ),
 
-              const SizedBox(height: 16),
 
-              const Text(
-                'TAFWELA',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Color(0xFF1A2A4A),
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
-                ),
-              ),
+
+
 
               const SizedBox(height: 6),
 

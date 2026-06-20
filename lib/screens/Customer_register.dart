@@ -60,18 +60,14 @@ class CustomerRegister extends StatelessWidget {
                 bottomRight: Radius.circular(32),
               ),
             ),
-            child: const Column(
+            child:  Column(
               children: [
-                SizedBox(height: 8),
-                Icon(Icons.local_gas_station, color: Colors.white, size: 36),
-                SizedBox(height: 6),
-                Text(
-                  'TAFWELA',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.2,
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.5,
+                  height: MediaQuery.of(context).size.width * 0.2,
+                  child:  Image.asset(
+                    'lib/assets/images/logo_white.png',
+                    fit: BoxFit.contain,
                   ),
                 ),
                 SizedBox(height: 4),

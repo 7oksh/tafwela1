@@ -19,17 +19,12 @@ class ChooseScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 40),
               Center(
-                child: Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF243656),
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: const Icon(
-                    Icons.local_gas_station,
-                    color: Colors.white,
-                    size: 32,
+                child: SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.5,
+                  height: MediaQuery.of(context).size.width * 0.2,
+                  child: Image.asset(
+                    'lib/assets/images/logo_white.png',
+                    fit: BoxFit.contain,
                   ),
                 ),
               ),

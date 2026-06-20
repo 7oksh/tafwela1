@@ -70,32 +70,17 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
 
-            Container(
-              width: 100,
-              height: 100,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.local_gas_station,
-                color: Color(0xFF1A2F5A),
-                size: 50,
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.5,
+              height: MediaQuery.of(context).size.width * 0.2,
+              child: Image.asset(
+                'lib/assets/images/logo_white.png',
+                fit: BoxFit.contain,
               ),
             ),
-
-            const SizedBox(height: 24),
+            const SizedBox(height: 6),
 
             // App name
-            const Text(
-              'TAFWELA',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 3,
-              ),
-            ),
 
             const SizedBox(height: 6),
 
