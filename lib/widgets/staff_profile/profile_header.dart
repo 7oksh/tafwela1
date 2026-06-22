@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-import '../../screens/staff/edite_profile_screen.dart';
+import '../../views/staff/profile/edit_profile_view.dart';
 
 class ProfileHeader extends StatelessWidget {
   const ProfileHeader({super.key});
@@ -69,7 +68,7 @@ class ProfileHeader extends StatelessWidget {
 
               GestureDetector(
                 onTap: () {
-                  Get.to(() =>  EditeProfileScreen());
+                  Get.to(() =>  EditProfileView());
                 },
                 child: Container(
                   decoration: BoxDecoration(
@@ -100,7 +99,7 @@ class ProfileHeader extends StatelessWidget {
                 right: 5,
                 child: GestureDetector(
                   onTap: () {
-                    Get.to(() =>  EditeProfileScreen());
+                    Get.to(() =>  EditProfileView());
                   },
                   child: Container(
                     padding: const EdgeInsets.all(6),
