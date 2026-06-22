@@ -5,7 +5,7 @@ import 'package:internet_connection_checker_plus/internet_connection_checker_plu
 class ConnectivityService extends GetxService {
   final RxBool isConnected = true.obs;
 
-  StreamSubscription? _subscription;
+  late final StreamSubscription _subscription;
 
   Future<ConnectivityService> init() async {
     isConnected.value =
@@ -22,7 +22,7 @@ class ConnectivityService extends GetxService {
 
   @override
   void onClose() {
-    _subscription?.cancel();
+    _subscription.cancel();
     super.onClose();
   }
 }

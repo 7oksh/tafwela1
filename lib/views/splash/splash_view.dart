@@ -6,6 +6,8 @@ import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:new_version/controllers/map/map_controller.dart';
 import 'package:new_version/views/intro/intro_view.dart';
 
+import '../../services/connectivity_service.dart';
+
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
 
@@ -28,7 +30,7 @@ class _SplashViewState extends State<SplashView> {
     if (_currentPosition != null) {
       Get.find<MapController>().setPosition(_currentPosition!);
     }
-
+    await Get.putAsync(() async => ConnectivityService().init());
     await Future.delayed(const Duration(seconds: 5));
     Get.off(const IntroView());
   }
