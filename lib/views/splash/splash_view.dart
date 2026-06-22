@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-
 import 'package:new_version/controllers/map/map_controller.dart';
 import 'package:new_version/views/intro/intro_view.dart';
-
-import '../../services/connectivity_service.dart';
+import '../../controllers/settings/onboarding_controller.dart';
+import '../auth/choose_view.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -30,9 +29,13 @@ class _SplashViewState extends State<SplashView> {
     if (_currentPosition != null) {
       Get.find<MapController>().setPosition(_currentPosition!);
     }
-    await Get.putAsync(() async => ConnectivityService().init());
     await Future.delayed(const Duration(seconds: 5));
-    Get.off(const IntroView());
+    final OnboardingController controller = Get.put(OnboardingController());
+    if (controller.isFirstTime()) {
+      Get.off(const IntroView());
+    } else {
+      Get.off(() => const ChooseView());
+    }
   }
 
   Future<void> _getCurrentLocation() async {
@@ -42,14 +45,16 @@ class _SplashViewState extends State<SplashView> {
 
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) return;
+          permission == LocationPermission.deniedForever)
+        return;
 
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      ).timeout(
-        const Duration(seconds: 5),
-        onTimeout: () => Future.error('timeout'),
-      );
+      final position =
+          await Geolocator.getCurrentPosition(
+            desiredAccuracy: LocationAccuracy.high,
+          ).timeout(
+            const Duration(seconds: 5),
+            onTimeout: () => Future.error('timeout'),
+          );
 
       if (mounted) setState(() => _currentPosition = position);
     } catch (e) {
@@ -94,7 +99,10 @@ class _SplashViewState extends State<SplashView> {
                       _currentPosition == null
                           ? 'SEARCHING FOR NEAREST STATION'
                           : 'LOCATION FOUND ✓',
-                      style: const TextStyle(color: Colors.white54, fontSize: 10),
+                      style: const TextStyle(
+                        color: Colors.white54,
+                        fontSize: 10,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -115,7 +123,11 @@ class _SplashViewState extends State<SplashView> {
                 SizedBox(width: 4),
                 Text(
                   'SECURE PETROLEUM SERVICES',
-                  style: TextStyle(color: Colors.white38, fontSize: 10, letterSpacing: 1),
+                  style: TextStyle(
+                    color: Colors.white38,
+                    fontSize: 10,
+                    letterSpacing: 1,
+                  ),
                 ),
               ],
             ),

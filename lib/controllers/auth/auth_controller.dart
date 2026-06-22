@@ -22,6 +22,7 @@ class AuthController extends GetxController {
     return true;
   }
 
+
   Future<void> loginUser({
     required String email,
     required String password,

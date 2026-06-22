@@ -1,9 +1,10 @@
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:get_storage/get_storage.dart'; // 1. استيراد المكتبة الجديدة
 import 'package:new_version/models/notification_model.dart';
 
 class NotificationController extends GetxController {
+  // تعريف كائن GetStorage
+  final box = GetStorage();
 
   // الدوت
   var hasNotification = false.obs;
@@ -17,33 +18,31 @@ class NotificationController extends GetxController {
   // init
   @override
   void onInit() {
-    loadSettings();
     super.onInit();
+    loadSettings();
+
+    // (إضافة اختيارية ممتازة): يمكنك جعل GetStorage يراقب التغييرات تلقائياً
+    // box.listenKey('notifications_enabled', (value) {
+    //   notificationsEnabled.value = value ?? true;
+    // });
   }
 
-  // تحميل الحالة
-  Future<void> loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    notificationsEnabled.value =
-        prefs.getBool("notifications_enabled") ?? true;
+  // تحميل الحالة (لاحظ إزالة Future و async لأن القراءة فورية)
+  void loadSettings() {
+    notificationsEnabled.value = box.read("notifications_enabled") ?? true;
   }
 
-  // حفظ الحالة
-  Future<void> toggleNotifications(bool value) async {
+  // حفظ الحالة (لاحظ إزالة Future و await لأن الكتابة فورية)
+  void toggleNotifications(bool value) {
     notificationsEnabled.value = value;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool("notifications_enabled", value);
+    box.write("notifications_enabled", value);
   }
 
   // إضافة notification
   void addNotification(String title, String body) {
     notifications.insert(
       0,
-      NotificationModel(
-        title: title,
-        body: body,
-        time: DateTime.now(),
-      ),
+      NotificationModel(title: title, body: body, time: DateTime.now()),
     );
     hasNotification.value = true;
   }

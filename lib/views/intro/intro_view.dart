@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:introduction_screen/introduction_screen.dart';
-import 'package:new_version/views/auth/choose_view.dart';
+
+import '../../controllers/settings/onboarding_controller.dart';
 
 class IntroView extends StatelessWidget {
   const IntroView({super.key});
 
   void _goToLogin() {
-    Get.off(() => const ChooseView());
+    final controller = Get.find<OnboardingController>();
+    controller.completeOnboarding();
   }
 
   PageDecoration _pageDecoration() => const PageDecoration(
@@ -17,11 +19,7 @@ class IntroView extends StatelessWidget {
       fontWeight: FontWeight.bold,
       height: 1.5,
     ),
-    bodyTextStyle: TextStyle(
-      color: Colors.white60,
-      fontSize: 14,
-      height: 1.6,
-    ),
+    bodyTextStyle: TextStyle(color: Colors.white60, fontSize: 14, height: 1.6),
     pageColor: Color(0xFF1A2F5A),
     imagePadding: EdgeInsets.only(top: 40),
     bodyPadding: EdgeInsets.symmetric(horizontal: 24),
@@ -40,7 +38,8 @@ class IntroView extends StatelessWidget {
         ),
         PageViewModel(
           title: 'تابع حالة الزحمة لحظة بلحظة',
-          body: 'اعرف حالة المحطة قبل ما تروح ووفر وقتك ومجهودك في تحديثاتنا اللحظاتية',
+          body:
+              'اعرف حالة المحطة قبل ما تروح ووفر وقتك ومجهودك في تحديثاتنا اللحظاتية',
           image: Image.asset('lib/assets/images/sc2.png'),
           decoration: _pageDecoration(),
         ),
@@ -60,10 +59,7 @@ class IntroView extends StatelessWidget {
         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
       onDone: _goToLogin,
-      skip: const Text(
-        'تخطي',
-        style: TextStyle(color: Colors.white60),
-      ),
+      skip: const Text('تخطي', style: TextStyle(color: Colors.white60)),
       showSkipButton: true,
       onSkip: _goToLogin,
       dotsDecorator: DotsDecorator(
