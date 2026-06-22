@@ -5,6 +5,8 @@ import 'package:new_version/controllers/auth/auth_controller.dart';
 import 'package:new_version/views/auth/customer_register_view.dart';
 import 'package:new_version/views/auth/employee_register_view.dart';
 
+import '../../models/user_role.dart';
+
 class LoginView extends StatelessWidget {
   LoginView({super.key});
 
@@ -12,11 +14,13 @@ class LoginView extends StatelessWidget {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _obscurePassword = true.obs;
-  final int choose = Get.arguments ?? 0;
+  final UserRole choose = Get.arguments ?? UserRole.customer;
 
   void _submit() {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      Get.snackbar('تنبيه', 'من فضلك ادخل الإيميل وكلمة المرور');
+      if (!Get.isSnackbarOpen) {
+        Get.snackbar('تنبيه', 'من فضلك ادخل الإيميل وكلمة المرور');
+      }
       return;
     }
 
@@ -74,8 +78,14 @@ class LoginView extends StatelessWidget {
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: 'أدخل بريدك الإلكتروني',
-                  hintStyle: const TextStyle(color: Color(0xFFB0BEC5), fontSize: 14),
-                  prefixIcon: const Icon(Icons.person_outline, color: Color(0xFFB0BEC5)),
+                  hintStyle: const TextStyle(
+                    color: Color(0xFFB0BEC5),
+                    fontSize: 14,
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.person_outline,
+                    color: Color(0xFFB0BEC5),
+                  ),
                   filled: true,
                   fillColor: const Color(0xFFF5F7FA),
                   border: OutlineInputBorder(
@@ -116,66 +126,79 @@ class LoginView extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              Obx(() => TextFormField(
-                controller: _passwordController,
-                obscureText: _obscurePassword.value,
-                decoration: InputDecoration(
-                  hintText: 'أدخل كلمة المرور',
-                  hintStyle: const TextStyle(color: Color(0xFFB0BEC5), fontSize: 14),
-                  prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFFB0BEC5)),
-                  suffixIcon: GestureDetector(
-                    onTap: () => _obscurePassword.value = !_obscurePassword.value,
-                    child: Icon(
-                      _obscurePassword.value
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      color: const Color(0xFFB0BEC5),
+              Obx(
+                () => TextFormField(
+                  controller: _passwordController,
+                  obscureText: _obscurePassword.value,
+                  decoration: InputDecoration(
+                    hintText: 'أدخل كلمة المرور',
+                    hintStyle: const TextStyle(
+                      color: Color(0xFFB0BEC5),
+                      fontSize: 14,
                     ),
+                    prefixIcon: const Icon(
+                      Icons.lock_outline,
+                      color: Color(0xFFB0BEC5),
+                    ),
+                    suffixIcon: GestureDetector(
+                      onTap: () =>
+                          _obscurePassword.value = !_obscurePassword.value,
+                      child: Icon(
+                        _obscurePassword.value
+                            ? Icons.visibility_off_outlined
+                            : Icons.visibility_outlined,
+                        color: const Color(0xFFB0BEC5),
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: const Color(0xFFF5F7FA),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                  filled: true,
-                  fillColor: const Color(0xFFF5F7FA),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-              )),
+              ),
 
               const SizedBox(height: 28),
 
               // ===== LOGIN BUTTON =====
-              Obx(() => SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: authController.isLoading.value ? null : _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1A2A4A),
-                    disabledBackgroundColor: const Color(0xFF1A2A4A).withOpacity(0.6),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+              Obx(
+                () => SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: authController.isLoading.value ? null : _submit,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1A2A4A),
+                      disabledBackgroundColor: const Color(
+                        0xFF1A2A4A,
+                      ).withOpacity(0.6),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
-                  ),
-                  child: authController.isLoading.value
-                      ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
-                      : const Text(
-                    'تسجيل الدخول',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    child: authController.isLoading.value
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            'تسجيل الدخول',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
                 ),
-              )),
+              ),
 
               const SizedBox(height: 24),
 
@@ -202,12 +225,21 @@ class LoginView extends StatelessWidget {
                       onPressed: () {
                         // TODO: Google Sign-In
                       },
-                      icon: const FaIcon(FontAwesomeIcons.google, size: 20, color: Color(0xFFDB4437)),
-                      label: const Text('Google', style: TextStyle(color: Color(0xFF1A2A4A))),
+                      icon: const FaIcon(
+                        FontAwesomeIcons.google,
+                        size: 20,
+                        color: Color(0xFFDB4437),
+                      ),
+                      label: const Text(
+                        'Google',
+                        style: TextStyle(color: Color(0xFF1A2A4A)),
+                      ),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         side: const BorderSide(color: Color(0xFFDDE3F0)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
@@ -217,12 +249,21 @@ class LoginView extends StatelessWidget {
                       onPressed: () {
                         // TODO: Facebook Sign-In
                       },
-                      icon: const FaIcon(FontAwesomeIcons.facebook, size: 20, color: Color(0xFF1877F2)),
-                      label: const Text('Facebook', style: TextStyle(color: Color(0xFF1A2A4A))),
+                      icon: const FaIcon(
+                        FontAwesomeIcons.facebook,
+                        size: 20,
+                        color: Color(0xFF1877F2),
+                      ),
+                      label: const Text(
+                        'Facebook',
+                        style: TextStyle(color: Color(0xFF1A2A4A)),
+                      ),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         side: const BorderSide(color: Color(0xFFDDE3F0)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
@@ -236,9 +277,9 @@ class LoginView extends StatelessWidget {
                 children: [
                   GestureDetector(
                     onTap: () {
-                      if (choose == 1) {
+                      if (choose == UserRole.customer) {
                         Get.to(() => CustomerRegisterView());
-                      } else if (choose == 2) {
+                      } else if (choose == UserRole.staff) {
                         Get.to(() => EmployeeRegisterView());
                       }
                     },

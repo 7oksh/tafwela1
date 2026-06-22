@@ -1,6 +1,7 @@
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:new_version/models/user_role.dart';
 
 import 'login_view.dart';
 
@@ -56,7 +57,7 @@ class ChooseView extends StatelessWidget {
                 title: 'سائق',
                 subtitle: 'ابحث عن أقرب محطة وتجنب الزحمة',
                 onTap: () {
-                  Get.to(() => LoginView(), arguments: 1);
+                  Get.to(() => LoginView(), arguments: UserRole.customer);
                 },
               ),
               const SizedBox(height: 16),
@@ -65,7 +66,7 @@ class ChooseView extends StatelessWidget {
                 title: 'موظف محطة',
                 subtitle: 'قم بتحديث حالة الزدحمة في محطتك',
                 onTap: () {
-                  Get.to(() => LoginView(), arguments: 2);
+                  Get.to(() => LoginView(), arguments: UserRole.staff);
                 },
               ),
               const SizedBox(height: 16),

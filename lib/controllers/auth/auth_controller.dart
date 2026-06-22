@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:new_version/models/user_role.dart';
 import 'package:new_version/views/auth/login_view.dart';
 import 'package:new_version/views/auth/pending_view.dart';
 import 'package:new_version/views/staff/main_view.dart';
@@ -26,7 +27,7 @@ class AuthController extends GetxController {
   Future<void> loginUser({
     required String email,
     required String password,
-    required int userType, // 1 للسائق، 2 للموظف
+    required UserRole userType, // 1 للسائق، 2 للموظف
   }) async {
     if (!checkInternet()) return;
     isLoading.value = true;
@@ -38,7 +39,7 @@ class AuthController extends GetxController {
 
       String uid = credential.user!.uid;
 
-      if (userType == 2) {
+      if (userType == UserRole.staff) {
         // البحث في كولكشن الموظفين مباشرة
         var staffDoc = await _firestore.collection('staff').doc(uid).get();
         if (staffDoc.exists) {
