@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 
-import '../controllers/AuthController.dart';
+import 'package:new_version/controllers/auth/auth_controller.dart';
 
-class CustomerRegister extends StatelessWidget {
-  CustomerRegister({super.key});
+class CustomerRegisterView extends StatelessWidget {
+  CustomerRegisterView({super.key});
 
   final authController = Get.find<AuthController>();
 
@@ -60,18 +60,18 @@ class CustomerRegister extends StatelessWidget {
                 bottomRight: Radius.circular(32),
               ),
             ),
-            child:  Column(
+            child: Column(
               children: [
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.5,
                   height: MediaQuery.of(context).size.width * 0.2,
-                  child:  Image.asset(
+                  child: Image.asset(
                     'lib/assets/images/logo_white.png',
                     fit: BoxFit.contain,
                   ),
                 ),
-                SizedBox(height: 4),
-                Text(
+                const SizedBox(height: 4),
+                const Text(
                   'ابعد عن الزحمة',
                   style: TextStyle(color: Color(0xFFB0BEC5), fontSize: 13),
                 ),
@@ -117,8 +117,7 @@ class CustomerRegister extends StatelessWidget {
                     hint: '01xxxxxxxxx',
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
-                    prefixIcon: const Icon(Icons.phone_outlined,
-                        color: Color(0xFFB0BEC5)),
+                    prefixIcon: const Icon(Icons.phone_outlined, color: Color(0xFFB0BEC5)),
                   ),
                   const SizedBox(height: 16),
                   Obx(() => _buildField(
@@ -127,8 +126,7 @@ class CustomerRegister extends StatelessWidget {
                     controller: _passwordController,
                     obscure: _obscurePassword.value,
                     suffixIcon: GestureDetector(
-                      onTap: () =>
-                      _obscurePassword.value = !_obscurePassword.value,
+                      onTap: () => _obscurePassword.value = !_obscurePassword.value,
                       child: Icon(
                         _obscurePassword.value
                             ? Icons.visibility_off_outlined
@@ -144,8 +142,7 @@ class CustomerRegister extends StatelessWidget {
                     controller: _confirmPasswordController,
                     obscure: _obscureConfirm.value,
                     suffixIcon: GestureDetector(
-                      onTap: () =>
-                      _obscureConfirm.value = !_obscureConfirm.value,
+                      onTap: () => _obscureConfirm.value = !_obscureConfirm.value,
                       child: Icon(
                         _obscureConfirm.value
                             ? Icons.visibility_off_outlined
@@ -155,28 +152,20 @@ class CustomerRegister extends StatelessWidget {
                     ),
                   )),
                   const SizedBox(height: 24),
-
                   Obx(() => SizedBox(
                     width: double.infinity,
                     height: 52,
                     child: ElevatedButton.icon(
-                      onPressed:
-                      authController.isLoading.value ? null : _submit,
+                      onPressed: authController.isLoading.value ? null : _submit,
                       icon: authController.isLoading.value
                           ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                       )
-                          : const Icon(Icons.arrow_back,
-                          color: Colors.white),
+                          : const Icon(Icons.arrow_back, color: Colors.white),
                       label: Text(
-                        authController.isLoading.value
-                            ? 'جاري الإنشاء...'
-                            : 'إنشاء الحساب',
+                        authController.isLoading.value ? 'جاري الإنشاء...' : 'إنشاء الحساب',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -185,15 +174,13 @@ class CustomerRegister extends StatelessWidget {
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF1A2A4A),
-                        disabledBackgroundColor:
-                        const Color(0xFF1A2A4A).withOpacity(0.6),
+                        disabledBackgroundColor: const Color(0xFF1A2A4A).withOpacity(0.6),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
                     ),
                   )),
-
                   const SizedBox(height: 20),
                   Row(
                     children: const [
@@ -202,8 +189,7 @@ class CustomerRegister extends StatelessWidget {
                         padding: EdgeInsets.symmetric(horizontal: 12),
                         child: Text(
                           'OR SIGN UP WITH',
-                          style:
-                          TextStyle(color: Color(0xFFB0BEC5), fontSize: 11),
+                          style: TextStyle(color: Color(0xFFB0BEC5), fontSize: 11),
                         ),
                       ),
                       Expanded(child: Divider(color: Color(0xFFDDE3F0))),
@@ -215,17 +201,12 @@ class CustomerRegister extends StatelessWidget {
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: () {},
-                          icon: const FaIcon(FontAwesomeIcons.google,
-                              size: 18, color: Color(0xFFDB4437)),
-                          label: const Text('Google',
-                              style: TextStyle(color: Color(0xFF1A2A4A))),
+                          icon: const FaIcon(FontAwesomeIcons.google, size: 18, color: Color(0xFFDB4437)),
+                          label: const Text('Google', style: TextStyle(color: Color(0xFF1A2A4A))),
                           style: OutlinedButton.styleFrom(
-                            padding:
-                            const EdgeInsets.symmetric(vertical: 14),
-                            side:
-                            const BorderSide(color: Color(0xFFDDE3F0)),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            side: const BorderSide(color: Color(0xFFDDE3F0)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                         ),
                       ),
@@ -233,17 +214,12 @@ class CustomerRegister extends StatelessWidget {
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed: () {},
-                          icon: const FaIcon(FontAwesomeIcons.facebook,
-                              size: 18, color: Color(0xFF1877F2)),
-                          label: const Text('Facebook',
-                              style: TextStyle(color: Color(0xFF1A2A4A))),
+                          icon: const FaIcon(FontAwesomeIcons.facebook, size: 18, color: Color(0xFF1877F2)),
+                          label: const Text('Facebook', style: TextStyle(color: Color(0xFF1A2A4A))),
                           style: OutlinedButton.styleFrom(
-                            padding:
-                            const EdgeInsets.symmetric(vertical: 14),
-                            side:
-                            const BorderSide(color: Color(0xFFDDE3F0)),
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            side: const BorderSide(color: Color(0xFFDDE3F0)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                         ),
                       ),
@@ -254,8 +230,7 @@ class CustomerRegister extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Text('عندك حساب؟ ',
-                          style: TextStyle(
-                              color: Color(0xFFB0BEC5), fontSize: 13)),
+                          style: TextStyle(color: Color(0xFFB0BEC5), fontSize: 13)),
                       GestureDetector(
                         onTap: () => Get.back(),
                         child: const Text(
@@ -273,8 +248,7 @@ class CustomerRegister extends StatelessWidget {
                   const Text(
                     'بالتسجيل أنت توافق على الشروط والأحكام وسياسة الخصوصية الخاصة بتفويله',
                     textAlign: TextAlign.center,
-                    style:
-                    TextStyle(color: Color(0xFFB0BEC5), fontSize: 11),
+                    style: TextStyle(color: Color(0xFFB0BEC5), fontSize: 11),
                   ),
                   const SizedBox(height: 24),
                 ],
@@ -317,8 +291,7 @@ class CustomerRegister extends StatelessWidget {
           textDirection: textDirection,
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle:
-            const TextStyle(color: Color(0xFFB0BEC5), fontSize: 13),
+            hintStyle: const TextStyle(color: Color(0xFFB0BEC5), fontSize: 13),
             prefixIcon: prefixIcon,
             suffixIcon: suffixIcon,
             helperText: helperText,
@@ -329,8 +302,7 @@ class CustomerRegister extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide.none,
             ),
-            contentPadding: const EdgeInsets.symmetric(
-                vertical: 14, horizontal: 12),
+            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
           ),
         ),
       ],

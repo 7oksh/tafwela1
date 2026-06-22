@@ -1,12 +1,11 @@
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_navigation/src/extension_navigation.dart';
+import 'package:get/get.dart';
 
-import 'The_login.dart';
+import 'login_view.dart';
 
-class ChooseScreen extends StatelessWidget {
-  const ChooseScreen({super.key});
+class ChooseView extends StatelessWidget {
+  const ChooseView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +40,6 @@ class ChooseScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-
               const Text(
                 'اختر نوع الحساب للمتابعة',
                 textAlign: TextAlign.right,
@@ -53,29 +51,24 @@ class ChooseScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 36),
-
               _AccountTypeCard(
                 icon: FluentIcons.vehicle_car_20_regular,
                 title: 'سائق',
                 subtitle: 'ابحث عن أقرب محطة وتجنب الزحمة',
                 onTap: () {
-                  Get.to(() => Login(), arguments: 1);
+                  Get.to(() => LoginView(), arguments: 1);
                 },
               ),
-
               const SizedBox(height: 16),
-
               _AccountTypeCard(
                 icon: FluentIcons.gas_pump_20_regular,
                 title: 'موظف محطة',
                 subtitle: 'قم بتحديث حالة الزدحمة في محطتك',
                 onTap: () {
-                  Get.to(() => Login(), arguments: 2);
+                  Get.to(() => LoginView(), arguments: 2);
                 },
               ),
-
               const SizedBox(height: 16),
-
             ],
           ),
         ),

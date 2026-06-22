@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../controllers/nav_controller.dart';
-import '../../controllers/notification_controller.dart';
-import '../../screens/staff/notifications_screen.dart';
+import 'package:new_version/controllers/home/nav_controller.dart';
+import 'package:new_version/controllers/notification/notification_controller.dart';
+import 'package:new_version/views/staff/notifications/notifications_view.dart';
 
 class HeaderWidget extends StatelessWidget {
   HeaderWidget({super.key});
@@ -84,7 +84,7 @@ class HeaderWidget extends StatelessWidget {
           Obx(() => GestureDetector(
     onTap: () {
     notificationController.clearNotifications();
-    Get.to(() => const NotificationsScreen());
+    Get.to(() => const NotificationsView());
     },
     child: Container(
     padding: const EdgeInsets.all(10),

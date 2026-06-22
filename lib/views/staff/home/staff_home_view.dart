@@ -2,19 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../controllers/status_controller.dart';
-import '../../controllers/timer_controller.dart';
-import '../../widgets/staff_home/countdown_card.dart';
-import '../../widgets/staff_home/header_widget.dart';
-import '../../widgets/staff_home/status_card.dart';
-import '../../widgets/staff_home/warning_card.dart';
+import 'package:new_version/controllers/home/status_controller.dart';
+import 'package:new_version/controllers/home/timer_controller.dart';
+import 'package:new_version/widgets/staff_home/countdown_card.dart';
+import 'package:new_version/widgets/staff_home/header_widget.dart';
+import 'package:new_version/widgets/staff_home/status_card.dart';
+import 'package:new_version/widgets/staff_home/warning_card.dart';
 
-class StaffHomeScreen extends StatelessWidget {
-  StaffHomeScreen({super.key});
+class StaffHomeView extends StatelessWidget {
+  StaffHomeView({super.key});
 
   final timerController = Get.put(TimerController());
   final statusController = Get.find<StatusController>();
-
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +36,6 @@ class StaffHomeScreen extends StatelessWidget {
 
               const SizedBox(height: 10),
 
-
               Obx(() => GridView.count(
                 crossAxisCount: 2,
                 shrinkWrap: true,
@@ -51,47 +49,37 @@ class StaffHomeScreen extends StatelessWidget {
                     title: "منخفض",
                     icon: Icons.local_gas_station,
                     color: Colors.green,
-                    isSelected:
-                    statusController.isSelected("low"),
-                    onTap: () =>
-                        statusController.selectStatus("low"),
+                    isSelected: statusController.isSelected("low"),
+                    onTap: () => statusController.selectStatus("low"),
                   ),
                   StatusCard(
                     title: "متوسط",
                     icon: Icons.local_gas_station,
                     color: Colors.orange,
-                    isSelected:
-                    statusController.isSelected("medium"),
-                    onTap: () =>
-                        statusController.selectStatus("medium"),
+                    isSelected: statusController.isSelected("medium"),
+                    onTap: () => statusController.selectStatus("medium"),
                   ),
                   StatusCard(
                     title: "مرتفع",
                     icon: Icons.local_gas_station,
                     color: Colors.red,
-                    isSelected:
-                    statusController.isSelected("high"),
-                    onTap: () =>
-                        statusController.selectStatus("high"),
+                    isSelected: statusController.isSelected("high"),
+                    onTap: () => statusController.selectStatus("high"),
                   ),
                   StatusCard(
                     title: "لا يوجد وقود",
                     icon: Icons.block,
                     color: Colors.grey,
-                    isSelected:
-                    statusController.isSelected("none"),
-                    onTap: () =>
-                        statusController.selectStatus("none"),
+                    isSelected: statusController.isSelected("none"),
+                    onTap: () => statusController.selectStatus("none"),
                   ),
                 ],
               )),
 
               const SizedBox(height: 20),
 
-
               Obx(() {
-                final isEnabled =
-                    statusController.selectedStatus.value.isNotEmpty;
+                final isEnabled = statusController.selectedStatus.value.isNotEmpty;
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -120,7 +108,7 @@ class StaffHomeScreen extends StatelessWidget {
                         onTap: isEnabled
                             ? () {
                           timerController.resetTimer();
-                          // update
+                          // update status
                         }
                             : null,
                         child: Center(
@@ -129,22 +117,16 @@ class StaffHomeScreen extends StatelessWidget {
                             children: [
                               Icon(
                                 Icons.check_circle,
-                                color: isEnabled
-                                    ? Colors.white
-                                    : Colors.grey,
+                                color: isEnabled ? Colors.white : Colors.grey,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                isEnabled
-                                    ? "تحديث الحالة الآن"
-                                    : "اختر الحالة أولاً",
+                                isEnabled ? "تحديث الحالة الآن" : "اختر الحالة أولاً",
                                 style: GoogleFonts.cairo(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
-                                  color: isEnabled
-                                      ? Colors.white
-                                      : Colors.grey,
+                                  color: isEnabled ? Colors.white : Colors.grey,
                                 ),
                               ),
                             ],
@@ -154,8 +136,7 @@ class StaffHomeScreen extends StatelessWidget {
                     ),
                   ),
                 );
-              })
-
+              }),
             ],
           ),
         ),

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../controllers/nav_controller.dart';
+
+import 'package:new_version/controllers/home/nav_controller.dart';
 
 class CustomBottomNav extends StatelessWidget {
   CustomBottomNav({super.key});
@@ -37,10 +38,7 @@ class CustomBottomNav extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: isSelected ? Colors.blue : Colors.grey,
-          ),
+          Icon(icon, color: isSelected ? Colors.blue : Colors.grey),
           Text(
             text,
             style: GoogleFonts.cairo(

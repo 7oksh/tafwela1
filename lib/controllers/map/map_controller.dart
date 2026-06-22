@@ -8,7 +8,7 @@ class MapController extends GetxController {
     currentPosition.value = pos;
   }
 
-  Future<void> requestPermissionAndLocation() async { //crate
+  Future<void> requestPermissionAndLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       Get.snackbar('تنبيه', 'فعّل الـ GPS من الإعدادات',

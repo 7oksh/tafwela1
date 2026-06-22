@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:new_version/controllers/AuthController.dart';
-import 'package:new_version/screens/Customer_register.dart';
-import 'package:new_version/screens/Employee_register.dart';
+import 'package:new_version/controllers/auth/auth_controller.dart';
+import 'package:new_version/views/auth/customer_register_view.dart';
+import 'package:new_version/views/auth/employee_register_view.dart';
 
-class Login extends StatelessWidget {
-  Login({super.key});
+class LoginView extends StatelessWidget {
+  LoginView({super.key});
 
   final authController = Get.find<AuthController>();
   final _emailController = TextEditingController();
@@ -38,30 +38,22 @@ class Login extends StatelessWidget {
           child: ListView(
             children: [
               SizedBox(height: screenHeight * 0.06),
-
               Center(
-                child:SizedBox(
+                child: SizedBox(
                   width: MediaQuery.of(context).size.width * 0.5,
-                  height: MediaQuery.of(context).size.width * 0.2, // 👈 صغّر الارتفاع
+                  height: MediaQuery.of(context).size.width * 0.2,
                   child: Image.asset(
                     'lib/assets/images/logo_blue.png',
                     fit: BoxFit.contain,
                   ),
                 ),
               ),
-
-
-
-
-
               const SizedBox(height: 6),
-
               const Text(
                 'Fueling your journey efficiently',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Color(0xFF1A2A4A), fontSize: 13),
               ),
-
               const SizedBox(height: 40),
 
               // ===== EMAIL =====
@@ -82,10 +74,8 @@ class Login extends StatelessWidget {
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   hintText: 'أدخل بريدك الإلكتروني',
-                  hintStyle:
-                  const TextStyle(color: Color(0xFFB0BEC5), fontSize: 14),
-                  prefixIcon: const Icon(Icons.person_outline,
-                      color: Color(0xFFB0BEC5)),
+                  hintStyle: const TextStyle(color: Color(0xFFB0BEC5), fontSize: 14),
+                  prefixIcon: const Icon(Icons.person_outline, color: Color(0xFFB0BEC5)),
                   filled: true,
                   fillColor: const Color(0xFFF5F7FA),
                   border: OutlineInputBorder(
@@ -131,13 +121,10 @@ class Login extends StatelessWidget {
                 obscureText: _obscurePassword.value,
                 decoration: InputDecoration(
                   hintText: 'أدخل كلمة المرور',
-                  hintStyle: const TextStyle(
-                      color: Color(0xFFB0BEC5), fontSize: 14),
-                  prefixIcon: const Icon(Icons.lock_outline,
-                      color: Color(0xFFB0BEC5)),
+                  hintStyle: const TextStyle(color: Color(0xFFB0BEC5), fontSize: 14),
+                  prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFFB0BEC5)),
                   suffixIcon: GestureDetector(
-                    onTap: () =>
-                    _obscurePassword.value = !_obscurePassword.value,
+                    onTap: () => _obscurePassword.value = !_obscurePassword.value,
                     child: Icon(
                       _obscurePassword.value
                           ? Icons.visibility_off_outlined
@@ -162,12 +149,10 @@ class Login extends StatelessWidget {
                 width: double.infinity,
                 height: 52,
                 child: ElevatedButton(
-                  onPressed:
-                  authController.isLoading.value ? null : _submit,
+                  onPressed: authController.isLoading.value ? null : _submit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1A2A4A),
-                    disabledBackgroundColor:
-                    const Color(0xFF1A2A4A).withOpacity(0.6),
+                    disabledBackgroundColor: const Color(0xFF1A2A4A).withOpacity(0.6),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -201,8 +186,7 @@ class Login extends StatelessWidget {
                     padding: EdgeInsets.symmetric(horizontal: 12),
                     child: Text(
                       'OR CONTINUE WITH',
-                      style:
-                      TextStyle(color: Color(0xFFB0BEC5), fontSize: 11),
+                      style: TextStyle(color: Color(0xFFB0BEC5), fontSize: 11),
                     ),
                   ),
                   Expanded(child: Divider(color: Color(0xFFDDE3F0))),
@@ -218,15 +202,12 @@ class Login extends StatelessWidget {
                       onPressed: () {
                         // TODO: Google Sign-In
                       },
-                      icon: const FaIcon(FontAwesomeIcons.google,
-                          size: 20, color: Color(0xFFDB4437)),
-                      label: const Text('Google',
-                          style: TextStyle(color: Color(0xFF1A2A4A))),
+                      icon: const FaIcon(FontAwesomeIcons.google, size: 20, color: Color(0xFFDB4437)),
+                      label: const Text('Google', style: TextStyle(color: Color(0xFF1A2A4A))),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         side: const BorderSide(color: Color(0xFFDDE3F0)),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
                   ),
@@ -236,15 +217,12 @@ class Login extends StatelessWidget {
                       onPressed: () {
                         // TODO: Facebook Sign-In
                       },
-                      icon: const FaIcon(FontAwesomeIcons.facebook,
-                          size: 20, color: Color(0xFF1877F2)),
-                      label: const Text('Facebook',
-                          style: TextStyle(color: Color(0xFF1A2A4A))),
+                      icon: const FaIcon(FontAwesomeIcons.facebook, size: 20, color: Color(0xFF1877F2)),
+                      label: const Text('Facebook', style: TextStyle(color: Color(0xFF1A2A4A))),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         side: const BorderSide(color: Color(0xFFDDE3F0)),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
                   ),
@@ -259,9 +237,9 @@ class Login extends StatelessWidget {
                   GestureDetector(
                     onTap: () {
                       if (choose == 1) {
-                        Get.to(() => CustomerRegister());
+                        Get.to(() => CustomerRegisterView());
                       } else if (choose == 2) {
-                        Get.to(() => EmployeeRegister());
+                        Get.to(() => EmployeeRegisterView());
                       }
                     },
                     child: const Text(
@@ -276,8 +254,7 @@ class Login extends StatelessWidget {
                   ),
                   const Text(
                     ' ليس لديك حساب؟',
-                    style:
-                    TextStyle(color: Color(0xFFB0BEC5), fontSize: 13),
+                    style: TextStyle(color: Color(0xFFB0BEC5), fontSize: 13),
                   ),
                 ],
               ),

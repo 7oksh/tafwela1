@@ -2,9 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:new_version/screens/The_login.dart';
-import '../screens/PendingScreen.dart';
-import '../screens/staff/main_screen.dart';
+import 'package:new_version/models/staff_model.dart';
+import 'package:new_version/models/user_model.dart';
+import 'package:new_version/views/auth/login_view.dart';
+import 'package:new_version/views/auth/pending_view.dart';
+import 'package:new_version/views/staff/main_view.dart';
 
 class AuthController extends GetxController {
   final _auth = FirebaseAuth.instance;
@@ -29,11 +31,11 @@ class AuthController extends GetxController {
         // البحث في كولكشن الموظفين مباشرة
         var staffDoc = await _firestore.collection('staff').doc(uid).get();
         if (staffDoc.exists) {
-          final status = staffDoc.data()?['status'];
-          if (status == 'approved') {
-            Get.offAll(() => MainScreen());
+          final staffModel = StaffModel.fromMap(uid, staffDoc.data()!);
+          if (staffModel.status == 'approved') {
+            Get.offAll(() => MainView());
           } else {
-            Get.offAll(() => PendingScreen());
+            Get.offAll(() => const PendingView());
           }
         } else {
           Get.snackbar('خطأ', 'حسابك مش مسجل كموظف');
@@ -42,6 +44,7 @@ class AuthController extends GetxController {
         // البحث في كولكشن المستخدمين (السائقين) مباشرة
         var userDoc = await _firestore.collection('users').doc(uid).get();
         if (userDoc.exists) {
+          final UserModel _ = UserModel.fromMap(uid, userDoc.data()!);
           Get.offAll(() => const Scaffold(body: Center(child: Text("واجهة السائق"))));
         } else {
           Get.snackbar('خطأ', 'حسابك مش مسجل كسائق');
@@ -67,15 +70,22 @@ class AuthController extends GetxController {
         email: email.trim(),
         password: password.trim(),
       );
-      await _firestore.collection('users').doc(credential.user!.uid).set({
-        'firstName': firstName.trim(),
-        'lastName': lastName.trim(),
-        'phone': phone.trim(),
-        'email': email.trim(),
-        'role': 'customer',
-        'status': 'approved',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+
+      final userModel = UserModel(
+        id: credential.user!.uid,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        role: 'customer',
+        status: 'approved',
+      );
+
+      await _firestore
+          .collection('users')
+          .doc(credential.user!.uid)
+          .set({...userModel.toMap(), 'createdAt': FieldValue.serverTimestamp()});
+
       Get.offAll(() => const Scaffold());
     } on FirebaseAuthException catch (e) {
       _handleAuthError(e);
@@ -98,18 +108,25 @@ class AuthController extends GetxController {
         email: email.trim(),
         password: password.trim(),
       );
-      await _firestore.collection('staff').doc(credential.user!.uid).set({
-        'firstName': firstName.trim(),
-        'lastName': lastName.trim(),
-        'phone': phone.trim(),
-        'email': email.trim(),
-        'stationName': stationName.trim(),
-        'staffId': credential.user!.uid,
-        'role': 'staff',
-        'status': 'pending',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-      Get.offAll(() => PendingScreen());
+
+      final staffModel = StaffModel(
+        id: credential.user!.uid,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        email: email.trim(),
+        phone: phone.trim(),
+        stationName: stationName.trim(),
+        staffId: credential.user!.uid,
+        role: 'staff',
+        status: 'pending',
+      );
+
+      await _firestore
+          .collection('staff')
+          .doc(credential.user!.uid)
+          .set({...staffModel.toMap(), 'createdAt': FieldValue.serverTimestamp()});
+
+      Get.offAll(() => const PendingView());
     } on FirebaseAuthException catch (e) {
       _handleAuthError(e);
     } finally {
@@ -119,7 +136,7 @@ class AuthController extends GetxController {
 
   Future<void> signOut() async {
     await _auth.signOut();
-    Get.offAll(() => Login());
+    Get.offAll(() => LoginView());
   }
 
   void _handleAuthError(FirebaseAuthException e) {

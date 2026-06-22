@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../widgets/staff_profile/logout_button.dart';
-import '../../widgets/staff_profile/profile_header.dart';
-import '../../widgets/staff_profile/settings_section.dart';
-import '../../widgets/staff_profile/staff_Info_card.dart';
+import 'package:new_version/widgets/staff_profile/logout_button.dart';
+import 'package:new_version/widgets/staff_profile/profile_header.dart';
+import 'package:new_version/widgets/staff_profile/settings_section.dart';
+import 'package:new_version/widgets/staff_profile/staff_Info_card.dart';
 
-class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+class ProfileView extends StatelessWidget {
+  const ProfileView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -56,7 +56,7 @@ class ProfileScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-             SettingsSection(),
+            SettingsSection(),
             const SizedBox(height: 20),
             const LogoutButton(),
             const SizedBox(height: 30),

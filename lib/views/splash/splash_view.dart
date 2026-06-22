@@ -3,20 +3,17 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 
-import '../controllers/Map_controller.dart';
-import 'intro_screens.dart';
+import 'package:new_version/controllers/map/map_controller.dart';
+import 'package:new_version/views/intro/intro_view.dart';
 
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+class SplashView extends StatefulWidget {
+  const SplashView({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  State<SplashView> createState() => _SplashViewState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
-
-
-
+class _SplashViewState extends State<SplashView> {
   Position? _currentPosition;
 
   @override
@@ -33,19 +30,17 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     await Future.delayed(const Duration(seconds: 5));
-    Get.off(IntroductionScreens());
+    Get.off(const IntroView());
   }
+
   Future<void> _getCurrentLocation() async {
     try {
-
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) return;
-
 
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) return;
-
 
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
@@ -55,9 +50,8 @@ class _SplashScreenState extends State<SplashScreen> {
       );
 
       if (mounted) setState(() => _currentPosition = position);
-
     } catch (e) {
-
+      // تجاهل الأخطاء
     }
   }
 
@@ -69,7 +63,6 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-
             SizedBox(
               width: MediaQuery.of(context).size.width * 0.5,
               height: MediaQuery.of(context).size.width * 0.2,
@@ -79,12 +72,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
             ),
             const SizedBox(height: 6),
-
-            // App name
-
             const SizedBox(height: 6),
-
-
             const Text(
               'FUEL & NAVIGATION',
               style: TextStyle(
@@ -93,17 +81,14 @@ class _SplashScreenState extends State<SplashScreen> {
                 letterSpacing: 2,
               ),
             ),
-
             const SizedBox(height: 60),
-
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Center(
-                    child:  Text(
+                    child: Text(
                       _currentPosition == null
                           ? 'SEARCHING FOR NEAREST STATION'
                           : 'LOCATION FOUND ✓',
@@ -114,21 +99,16 @@ class _SplashScreenState extends State<SplashScreen> {
                   Center(
                     child: LoadingAnimationWidget.inkDrop(
                       color: Colors.white54,
-
                       size: 30,
                     ),
                   ),
-
                 ],
               ),
             ),
-
             const SizedBox(height: 40),
-
-
             const Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children:  [
+              children: [
                 Icon(Icons.lock_outline, color: Colors.white38, size: 12),
                 SizedBox(width: 4),
                 Text(
@@ -143,7 +123,3 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 }
-
-
-
-

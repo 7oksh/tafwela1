@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:new_version/screens/staff/profile_screen.dart';
 
-import '../../controllers/nav_controller.dart';
+import 'package:new_version/controllers/home/nav_controller.dart';
+import 'package:new_version/views/staff/home/staff_home_view.dart';
+import 'package:new_version/views/staff/profile/profile_view.dart';
+import 'package:new_version/widgets/common/custom_bottom_nav.dart';
 
-
-
-import '../../widgets/custom_bottom_nav.dart';
-import 'staff_home_screen.dart';
-
-class MainScreen extends StatelessWidget {
-  MainScreen({super.key});
+class MainView extends StatelessWidget {
+  MainView({super.key});
 
   final navController = Get.put(NavController());
 
@@ -21,18 +18,17 @@ class MainScreen extends StatelessWidget {
       body: Obx(() {
         switch (navController.currentIndex.value) {
           case 0:
-            return StaffHomeScreen();
+            return StaffHomeView();
           case 1:
             return Center(child: Text("التقارير", style: GoogleFonts.cairo()));
           case 2:
             return Center(child: Text("السجل", style: GoogleFonts.cairo()));
           case 3:
-            return const ProfileScreen();
+            return const ProfileView();
           default:
-            return StaffHomeScreen();
+            return StaffHomeView();
         }
       }),
-
       bottomNavigationBar: CustomBottomNav(),
     );
   }

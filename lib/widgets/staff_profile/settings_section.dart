@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../controllers/notification_controller.dart';
-import '../../screens/staff/change_password_screen.dart';
+import 'package:new_version/controllers/notification/notification_controller.dart';
+import 'package:new_version/views/staff/profile/change_password_view.dart';
 
 class SettingsSection extends StatelessWidget {
 
@@ -96,7 +96,7 @@ class SettingsSection extends StatelessWidget {
 
               Get.to(
                     () =>
-                    ChangePasswordScreen(),
+                    ChangePasswordView(),
               );
             },
           ),

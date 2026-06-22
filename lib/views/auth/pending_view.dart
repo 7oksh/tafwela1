@@ -1,13 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_navigation/src/extension_navigation.dart';
+import 'package:get/get.dart';
 
-import 'The_login.dart';
+import 'login_view.dart';
 
-class PendingScreen extends StatelessWidget {
-  const PendingScreen({super.key});
+class PendingView extends StatelessWidget {
+  const PendingView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,8 +17,7 @@ class PendingScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.hourglass_top,
-                  size: 80, color: Color(0xFF1A2A4A)),
+              const Icon(Icons.hourglass_top, size: 80, color: Color(0xFF1A2A4A)),
               const SizedBox(height: 24),
               const Text(
                 'في انتظار الموافقة',
@@ -40,15 +37,14 @@ class PendingScreen extends StatelessWidget {
               ElevatedButton(
                 onPressed: () async {
                   await FirebaseAuth.instance.signOut();
-                  Get.offAll(() => Login());
+                  Get.offAll(() => LoginView());
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1A2A4A),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 32, vertical: 14),
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
                 ),
                 child: const Text(
                   'تسجيل الخروج',

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../widgets/staff_home/notification_item.dart';
+import 'package:new_version/widgets/staff_home/notification_item.dart';
 
-class NotificationsScreen extends StatelessWidget {
-  const NotificationsScreen({super.key});
+class NotificationsView extends StatelessWidget {
+  const NotificationsView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +16,6 @@ class NotificationsScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-
       appBar: AppBar(
         backgroundColor: const Color(0xFF1E3A5F),
         elevation: 0,
@@ -26,7 +25,6 @@ class NotificationsScreen extends StatelessWidget {
         ),
         centerTitle: true,
       ),
-
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: notifications.length,

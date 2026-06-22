@@ -69,7 +69,7 @@ class ProfileHeader extends StatelessWidget {
 
               GestureDetector(
                 onTap: () {
-                  Get.to(() =>  EditProfileScreen());
+                  Get.to(() =>  EditeProfileScreen());
                 },
                 child: Container(
                   decoration: BoxDecoration(
@@ -100,7 +100,7 @@ class ProfileHeader extends StatelessWidget {
                 right: 5,
                 child: GestureDetector(
                   onTap: () {
-                    Get.to(() =>  EditProfileScreen());
+                    Get.to(() =>  EditeProfileScreen());
                   },
                   child: Container(
                     padding: const EdgeInsets.all(6),

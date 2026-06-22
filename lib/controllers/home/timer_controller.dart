@@ -2,8 +2,8 @@ import 'dart:async';
 import 'package:get/get.dart';
 import 'package:just_audio/just_audio.dart';
 
-import '../services/notification_service.dart';
-import 'notification_controller.dart';
+import 'package:new_version/controllers/notification/notification_controller.dart';
+import 'package:new_version/services/notification_service.dart';
 
 class TimerController extends GetxController {
 
@@ -12,8 +12,7 @@ class TimerController extends GetxController {
 
   Timer? timer;
 
-  final notificationController =
-  Get.find<NotificationController>();
+  final notificationController = Get.find<NotificationController>();
 
   final player = AudioPlayer();
 
@@ -22,36 +21,26 @@ class TimerController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-
     startTimer();
   }
 
   // تشغيل التايمر
   void startTimer() {
-
     timer?.cancel();
 
     timer = Timer.periodic(
       const Duration(seconds: 1),
-          (t) {
-
+      (t) {
         if (remaining.value > 0) {
-
           remaining.value--;
-
         } else {
-
           t.cancel();
 
           if (!hasPlayed) {
-
             hasPlayed = true;
-
             playAlert();
 
-            if (notificationController
-                .notificationsEnabled.value) {
-
+            if (notificationController.notificationsEnabled.value) {
               NotificationService.showNotification(
                 title: "⚠️ انتهى الوقت",
                 body: "يرجى تنفيذ التحديث الآن",
@@ -70,28 +59,17 @@ class TimerController extends GetxController {
 
   // إعادة التايمر لـ 5 دقائق
   void resetTimer() {
-
     timer?.cancel();
-
     hasPlayed = false;
-
     remaining.value = 5 * 60;
-
     startTimer();
   }
 
   Future<void> playAlert() async {
-
     try {
-
-      await player.setAsset(
-        'lib/assets/sounds/alert.mp3',
-      );
-
+      await player.setAsset('lib/assets/sounds/alert.mp3');
       await player.play();
-
     } catch (e) {
-
       print("Audio error: $e");
     }
   }
@@ -104,11 +82,8 @@ class TimerController extends GetxController {
 
   @override
   void onClose() {
-
     timer?.cancel();
-
     player.dispose();
-
     super.onClose();
   }
 }

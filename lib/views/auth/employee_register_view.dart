@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import '../controllers/AuthController.dart';
+import 'package:new_version/controllers/auth/auth_controller.dart';
 
-class EmployeeRegister extends StatelessWidget {
-  EmployeeRegister({super.key});
+class EmployeeRegisterView extends StatelessWidget {
+  EmployeeRegisterView({super.key});
 
   final authController = Get.find<AuthController>();
 
@@ -67,7 +67,7 @@ class EmployeeRegister extends StatelessWidget {
                 SizedBox(
                   width: MediaQuery.of(context).size.width * 0.5,
                   height: MediaQuery.of(context).size.width * 0.2,
-                  child:  Image.asset(
+                  child: Image.asset(
                     'lib/assets/images/logo_white.png',
                     fit: BoxFit.contain,
                   ),

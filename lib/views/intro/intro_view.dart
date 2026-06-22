@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import "package:introduction_screen/introduction_screen.dart";
-import 'package:new_version/screens/chosse_screen.dart';
+import 'package:introduction_screen/introduction_screen.dart';
+import 'package:new_version/views/auth/choose_view.dart';
 
-class IntroductionScreens extends StatelessWidget {
-  const IntroductionScreens({super.key});
+class IntroView extends StatelessWidget {
+  const IntroView({super.key});
 
   void _goToLogin() {
-    Get.off(() => const ChooseScreen());
+    Get.off(() => const ChooseView());
   }
 
   PageDecoration _pageDecoration() => const PageDecoration(
@@ -34,8 +34,7 @@ class IntroductionScreens extends StatelessWidget {
       pages: [
         PageViewModel(
           title: 'دلوقتي تقدر تلاقي أقرب بنزينة ليك في ثواني',
-          body: 'تفويله بيساعدك توصل لأقرب محطة وقود بسهولة '
-              ,
+          body: 'تفويله بيساعدك توصل لأقرب محطة وقود بسهولة ',
           image: Image.asset('lib/assets/images/sc1.png'),
           decoration: _pageDecoration(),
         ),
@@ -52,25 +51,21 @@ class IntroductionScreens extends StatelessWidget {
           decoration: _pageDecoration(),
         ),
       ],
-
       next: const Text(
         'التالي',
         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
-
       done: const Text(
         'ابدأ الآن',
         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
       onDone: _goToLogin,
-
       skip: const Text(
         'تخطي',
         style: TextStyle(color: Colors.white60),
       ),
       showSkipButton: true,
       onSkip: _goToLogin,
-
       dotsDecorator: DotsDecorator(
         size: const Size(8, 8),
         activeSize: const Size(20, 8),
@@ -80,13 +75,10 @@ class IntroductionScreens extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
         ),
       ),
-
       globalBackgroundColor: const Color(0xFF1A2F5A),
       showNextButton: true,
       isProgress: true,
       curve: Curves.easeInOut,
     );
   }
-
-
 }
