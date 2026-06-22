@@ -15,22 +15,25 @@ import 'controllers/timer_controller.dart';
 
 import 'firebase_options.dart';
 
-
-
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-   await NotificationService.init();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-   );
+  await NotificationService.init();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   Get.put(AuthController());
   Get.put(StatusController());
   Get.put(NotificationController());
   Get.put(TimerController());
   Get.put(NavController());
   Get.put(MapController());
-  runApp(
-    GetMaterialApp(
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return GetMaterialApp(
       debugShowCheckedModeBanner: false,
       locale: const Locale('ar'),
       theme: ThemeData(
@@ -41,6 +44,6 @@ Future<void> main() async {
         return Directionality(textDirection: TextDirection.rtl, child: child!);
       },
       home: SplashScreen(),
-    ),
-  );
+    );
+  }
 }
