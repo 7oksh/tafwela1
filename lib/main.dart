@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:new_version/controllers/Map_controller.dart';
 import 'package:new_version/screens/splash_screen.dart';
+import 'package:new_version/services/ConnectivityService.dart';
 
 import 'package:new_version/services/notification_service.dart';
 
@@ -25,6 +26,9 @@ Future<void> main() async {
   Get.put(TimerController());
   Get.put(NavController());
   Get.put(MapController());
+  await Get.putAsync(
+        () => ConnectivityService().init(),
+  );
   runApp(MyApp());
 }
 

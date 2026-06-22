@@ -5,17 +5,28 @@ import 'package:get/get.dart';
 import 'package:new_version/screens/The_login.dart';
 import '../screens/PendingScreen.dart';
 import '../screens/staff/main_screen.dart';
+import '../services/ConnectivityService.dart';
 
 class AuthController extends GetxController {
   final _auth = FirebaseAuth.instance;
   final _firestore = FirebaseFirestore.instance;
   final isLoading = false.obs;
+  final ConnectivityService connectivity = Get.find<ConnectivityService>();
+
+  bool checkInternet() {
+    if (!connectivity.isConnected.value) {
+      Get.snackbar('لا يوجد اتصال', 'تأكد من اتصالك بالإنترنت');
+      return false;
+    }
+    return true;
+  }
 
   Future<void> loginUser({
     required String email,
     required String password,
     required int userType, // 1 للسائق، 2 للموظف
   }) async {
+    if (!checkInternet()) return;
     isLoading.value = true;
     try {
       UserCredential credential = await _auth.signInWithEmailAndPassword(
@@ -42,7 +53,9 @@ class AuthController extends GetxController {
         // البحث في كولكشن المستخدمين (السائقين) مباشرة
         var userDoc = await _firestore.collection('users').doc(uid).get();
         if (userDoc.exists) {
-          Get.offAll(() => const Scaffold(body: Center(child: Text("واجهة السائق"))));
+          Get.offAll(
+            () => const Scaffold(body: Center(child: Text("واجهة السائق"))),
+          );
         } else {
           Get.snackbar('خطأ', 'حسابك مش مسجل كسائق');
         }
@@ -61,6 +74,7 @@ class AuthController extends GetxController {
     required String lastName,
     required String phone,
   }) async {
+    if (!checkInternet()) return;
     isLoading.value = true;
     try {
       UserCredential credential = await _auth.createUserWithEmailAndPassword(
@@ -92,6 +106,7 @@ class AuthController extends GetxController {
     required String phone,
     required String stationName,
   }) async {
+    if (!checkInternet()) return;
     isLoading.value = true;
     try {
       UserCredential credential = await _auth.createUserWithEmailAndPassword(

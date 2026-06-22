@@ -672,6 +672,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.2"
+  internet_connection_checker_plus:
+    dependency: "direct main"
+    description:
+      name: internet_connection_checker_plus
+      sha256: "262e3dfdf95af02c0e76e31dc9a7a6653ccaf3b4e0a4754a6ce1c33e8b971e8b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.1.0"
   introduction_screen:
     dependency: "direct main"
     description:
