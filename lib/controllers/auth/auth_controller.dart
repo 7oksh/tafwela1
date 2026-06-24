@@ -6,7 +6,8 @@ import 'package:new_version/models/user_role.dart';
 import 'package:new_version/views/auth/login_view.dart';
 import 'package:new_version/views/auth/pending_view.dart';
 import 'package:new_version/views/staff/main_view.dart';
-
+import 'package:new_version/views/auth/blocked_employee_view.dart';
+import 'package:new_version/views/admin/admin_main_view.dart';
 import '../../services/connectivity_service.dart';
 
 class AuthController extends GetxController {
@@ -46,11 +47,20 @@ class AuthController extends GetxController {
           final status = staffDoc.data()?['status'];
           if (status == 'approved') {
             Get.offAll(() => MainView());
+          } else if (status == 'denied') {
+            Get.offAll(() => const BlockedEmployeeView());
           } else {
             Get.offAll(() => const PendingView());
           }
         } else {
           Get.snackbar('خطأ', 'حسابك مش مسجل كموظف');
+        }
+      } else if (userType == UserRole.admin) {
+        var adminDoc = await _firestore.collection('admins').doc(uid).get();
+        if (adminDoc.exists) {
+          Get.offAll(() => const AdminMainView());
+        } else {
+          Get.snackbar('تنبيه', 'هذا الحساب ليس مسؤولاً');
         }
       } else {
         // البحث في كولكشن المستخدمين (السائقين) مباشرة
@@ -135,9 +145,42 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> signOut() async {
+  Future<void> registerAdmin({
+    required String email,
+    required String password,
+    required String firstName,
+    required String lastName,
+  }) async {
+    try {
+      isLoading.value = true;
+      UserCredential credential = await _auth.createUserWithEmailAndPassword(
+        email: email.trim(),
+        password: password,
+      );
+
+      await _firestore.collection('admins').doc(credential.user!.uid).set({
+        'firstName': firstName.trim(),
+        'lastName': lastName.trim(),
+        'email': email.trim(),
+        'role': 'admin',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      Get.offAll(() => const AdminMainView());
+    } on FirebaseAuthException catch (e) {
+      _handleAuthError(e);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> signOut(UserRole userType) async {
     await _auth.signOut();
-    Get.offAll(() => LoginView());
+
+    Get.offAll(
+          () => LoginView(),
+      arguments: userType,
+    );
   }
 
   void _handleAuthError(FirebaseAuthException e) {

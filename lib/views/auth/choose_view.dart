@@ -70,6 +70,15 @@ class ChooseView extends StatelessWidget {
                 },
               ),
               const SizedBox(height: 16),
+              _AccountTypeCard(
+                icon: Icons.admin_panel_settings,
+                title: 'مسؤول النظام',
+                subtitle: 'إدارة الموظفين',
+                onTap: () {
+                  Get.to(() => LoginView(), arguments: UserRole.admin);
+                },
+              ),
+              const SizedBox(height: 16),
             ],
           ),
         ),
