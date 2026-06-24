@@ -58,7 +58,7 @@ class ProfileView extends StatelessWidget {
             const SizedBox(height: 20),
             SettingsSection(),
             const SizedBox(height: 20),
-            const LogoutButton(),
+            LogoutButton(),
             const SizedBox(height: 30),
           ],
         ),

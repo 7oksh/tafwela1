@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../controllers/auth/auth_controller.dart';
+import '../../models/user_role.dart';
+
 class LogoutButton extends StatelessWidget {
-  const LogoutButton({super.key});
+  LogoutButton({super.key});
+  final AuthController authController = Get.find<AuthController>();
 
   @override
   Widget build(BuildContext context) {
@@ -12,6 +17,7 @@ class LogoutButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         onTap: () {
           // TODO: logout action
+          authController.signOut(UserRole.staff);
         },
         child: Container(
           height: 55,

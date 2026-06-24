@@ -145,35 +145,6 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> registerAdmin({
-    required String email,
-    required String password,
-    required String firstName,
-    required String lastName,
-  }) async {
-    try {
-      isLoading.value = true;
-      UserCredential credential = await _auth.createUserWithEmailAndPassword(
-        email: email.trim(),
-        password: password,
-      );
-
-      await _firestore.collection('admins').doc(credential.user!.uid).set({
-        'firstName': firstName.trim(),
-        'lastName': lastName.trim(),
-        'email': email.trim(),
-        'role': 'admin',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
-      Get.offAll(() => const AdminMainView());
-    } on FirebaseAuthException catch (e) {
-      _handleAuthError(e);
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
   Future<void> signOut(UserRole userType) async {
     await _auth.signOut();
 

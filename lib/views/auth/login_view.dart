@@ -4,7 +4,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:new_version/controllers/auth/auth_controller.dart';
 import 'package:new_version/views/auth/customer_register_view.dart';
 import 'package:new_version/views/auth/employee_register_view.dart';
-import 'package:new_version/views/auth/admin_register_view.dart';
 
 import '../../models/user_role.dart';
 import 'choose_view.dart';
@@ -281,36 +280,36 @@ class LoginView extends StatelessWidget {
       
                 const SizedBox(height: 28),
       
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        if (choose == UserRole.customer) {
-                          Get.to(() => CustomerRegisterView());
-                        } else if (choose == UserRole.staff) {
-                          Get.to(() => EmployeeRegisterView());
-                        } else if (choose == UserRole.admin) {
-                          Get.to(() => AdminRegisterView());
-                        }
-                      },
-                      child: const Text(
-                        'إنشاء حساب',
-                        style: TextStyle(
-                          color: Color(0xFF1A2A4A),
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          decoration: TextDecoration.underline,
+                if (choose != UserRole.admin) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          if (choose == UserRole.customer) {
+                            Get.to(() => CustomerRegisterView());
+                          } else if (choose == UserRole.staff) {
+                            Get.to(() => EmployeeRegisterView());
+                          }
+                        },
+                        child: const Text(
+                          'إنشاء حساب',
+                          style: TextStyle(
+                            color: Color(0xFF1A2A4A),
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            decoration: TextDecoration.underline,
+                          ),
                         ),
                       ),
-                    ),
-                    const Text(
-                      ' ليس لديك حساب؟',
-                      style: TextStyle(color: Color(0xFFB0BEC5), fontSize: 13),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
+                      const Text(
+                        ' ليس لديك حساب؟',
+                        style: TextStyle(color: Color(0xFFB0BEC5), fontSize: 13),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+                ],
               ],
             ),
           ),
