@@ -4,11 +4,18 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
         android:label="Tafwela"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
+
+        <!-- Google Maps API Key -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyCyTeU9StDWm9kAQqTpwRHNLz6dGMFJc3E" />
 
         <activity
             android:name=".MainActivity"
