@@ -1,7 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:get/get.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:new_version/models/user_role.dart';
+import 'package:new_version/utils/social_auth_config.dart';
 import 'package:new_version/views/auth/login_view.dart';
 import 'package:new_version/views/auth/pending_view.dart';
 import 'package:new_version/views/staff/main_view.dart';
@@ -16,6 +19,10 @@ class AuthController extends GetxController {
   final isLoading = false.obs;
   final ConnectivityService connectivity = Get.find<ConnectivityService>();
 
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId: SocialAuthConfig.googleWebClientId,
+  );
+
   bool checkInternet() {
     if (!connectivity.isConnected.value) {
       Get.snackbar('لا يوجد اتصال', 'تأكد من اتصالك بالإنترنت');
@@ -24,57 +31,135 @@ class AuthController extends GetxController {
     return true;
   }
 
-
   Future<void> loginUser({
     required String email,
     required String password,
-    required UserRole userType, // 1 للسائق، 2 للموظف
+    required UserRole userType,
   }) async {
     if (!checkInternet()) return;
     isLoading.value = true;
     try {
-      UserCredential credential = await _auth.signInWithEmailAndPassword(
+      final credential = await _auth.signInWithEmailAndPassword(
         email: email.trim(),
         password: password.trim(),
       );
-
-      String uid = credential.user!.uid;
-
-      if (userType == UserRole.staff) {
-        // البحث في كولكشن الموظفين مباشرة
-        var staffDoc = await _firestore.collection('staff').doc(uid).get();
-        if (staffDoc.exists) {
-          final status = staffDoc.data()?['status'];
-          if (status == 'approved') {
-            Get.offAll(() => MainView());
-          } else if (status == 'denied') {
-            Get.offAll(() => const BlockedEmployeeView());
-          } else {
-            Get.offAll(() => const PendingView());
-          }
-        } else {
-          Get.snackbar('خطأ', 'حسابك مش مسجل كموظف');
-        }
-      } else if (userType == UserRole.admin) {
-        var adminDoc = await _firestore.collection('admins').doc(uid).get();
-        if (adminDoc.exists) {
-          Get.offAll(() => const AdminMainView());
-        } else {
-          Get.snackbar('تنبيه', 'هذا الحساب ليس مسؤولاً');
-        }
-      } else {
-        // البحث في كولكشن المستخدمين (السائقين) مباشرة
-        var userDoc = await _firestore.collection('users').doc(uid).get();
-        if (userDoc.exists) {
-          Get.offAll(() => const DriverMainScreen());
-        } else {
-          Get.snackbar('خطأ', 'حسابك مش مسجل كسائق');
-        }
-      }
+      await _routeAuthenticatedUser(credential.user!.uid, userType);
     } on FirebaseAuthException catch (e) {
       _handleAuthError(e);
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> signInWithGoogle({required UserRole userType}) async {
+    if (!checkInternet()) return;
+    isLoading.value = true;
+    try {
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) return;
+
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await _auth.signInWithCredential(credential);
+      await _handleSocialLogin(userCredential.user!, userType);
+    } on FirebaseAuthException catch (e) {
+      _handleAuthError(e);
+    } catch (_) {
+      Get.snackbar('تنبيه', 'فشل تسجيل الدخول بجوجل');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> signInWithFacebook({required UserRole userType}) async {
+    if (!checkInternet()) return;
+    isLoading.value = true;
+    try {
+      final result = await FacebookAuth.instance.login();
+      if (result.status == LoginStatus.cancelled) return;
+      if (result.status != LoginStatus.success || result.accessToken == null) {
+        Get.snackbar(
+          'تنبيه',
+          result.message ?? 'فشل تسجيل الدخول بفيسبوك',
+        );
+        return;
+      }
+
+      final credential = FacebookAuthProvider.credential(
+        result.accessToken!.tokenString,
+      );
+      final userCredential = await _auth.signInWithCredential(credential);
+      await _handleSocialLogin(userCredential.user!, userType);
+    } on FirebaseAuthException catch (e) {
+      _handleAuthError(e);
+    } catch (_) {
+      Get.snackbar('تنبيه', 'فشل تسجيل الدخول بفيسبوك');
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> _handleSocialLogin(User user, UserRole userType) async {
+    if (userType == UserRole.customer) {
+      final userDoc = await _firestore.collection('users').doc(user.uid).get();
+      if (!userDoc.exists) {
+        await _createSocialCustomer(user);
+      }
+    }
+    await _routeAuthenticatedUser(user.uid, userType);
+  }
+
+  Future<void> _createSocialCustomer(User user) async {
+    final displayName = user.displayName?.trim() ?? '';
+    final nameParts = displayName.split(RegExp(r'\s+'));
+    final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+    final lastName =
+        nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+
+    await _firestore.collection('users').doc(user.uid).set({
+      'firstName': firstName,
+      'lastName': lastName,
+      'phone': user.phoneNumber ?? '',
+      'email': user.email ?? '',
+      'role': 'customer',
+      'status': 'approved',
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> _routeAuthenticatedUser(String uid, UserRole userType) async {
+    if (userType == UserRole.staff) {
+      final staffDoc = await _firestore.collection('staff').doc(uid).get();
+      if (staffDoc.exists) {
+        final status = staffDoc.data()?['status'];
+        if (status == 'approved') {
+          Get.offAll(() => MainView());
+        } else if (status == 'denied') {
+          Get.offAll(() => const BlockedEmployeeView());
+        } else {
+          Get.offAll(() => const PendingView());
+        }
+      } else {
+        Get.snackbar('خطأ', 'حسابك مش مسجل كموظف');
+      }
+    } else if (userType == UserRole.admin) {
+      final adminDoc = await _firestore.collection('admins').doc(uid).get();
+      if (adminDoc.exists) {
+        Get.offAll(() => const AdminMainView());
+      } else {
+        Get.snackbar('تنبيه', 'هذا الحساب ليس مسؤولاً');
+      }
+    } else {
+      final userDoc = await _firestore.collection('users').doc(uid).get();
+      if (userDoc.exists) {
+        Get.offAll(() => const DriverMainScreen());
+      } else {
+        Get.snackbar('خطأ', 'حسابك مش مسجل كسائق');
+      }
     }
   }
 
@@ -147,10 +232,14 @@ class AuthController extends GetxController {
   }
 
   Future<void> signOut(UserRole userType) async {
-    await _auth.signOut();
+    await Future.wait([
+      _googleSignIn.signOut(),
+      FacebookAuth.instance.logOut(),
+      _auth.signOut(),
+    ]);
 
     Get.offAll(
-          () => LoginView(),
+      () => LoginView(),
       arguments: userType,
     );
   }
@@ -162,6 +251,8 @@ class AuthController extends GetxController {
       'user-not-found' => 'الحساب غير موجود',
       'wrong-password' => 'كلمة المرور خطأ',
       'invalid-credential' => 'بيانات الدخول غير صحيحة',
+      'account-exists-with-different-credential' =>
+        'هذا الإيميل مسجل بطريقة تسجيل أخرى',
       _ => 'خطأ: ${e.message}',
     };
     Get.snackbar('تنبيه', message, snackPosition: SnackPosition.BOTTOM);

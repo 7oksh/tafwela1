@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Tafwela</string>
+    <string name="facebook_app_id">1920610358630835</string>
+    <string name="fb_login_protocol_scheme">fb1920610358630835</string>
+    <string name="facebook_client_token">2d184f3b9f520e86a088975136aa1833</string>
+</resources>

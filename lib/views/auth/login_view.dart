@@ -226,56 +226,65 @@ class LoginView extends StatelessWidget {
       
                 const SizedBox(height: 20),
       
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          // TODO: Google Sign-In
-                        },
-                        icon: const FaIcon(
-                          FontAwesomeIcons.google,
-                          size: 20,
-                          color: Color(0xFFDB4437),
-                        ),
-                        label: const Text(
-                          'Google',
-                          style: TextStyle(color: Color(0xFF1A2A4A)),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          side: const BorderSide(color: Color(0xFFDDE3F0)),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                Obx(
+                  () {
+                    final loading = authController.isLoading.value;
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: loading
+                                ? null
+                                : () => authController.signInWithGoogle(
+                                      userType: choose,
+                                    ),
+                            icon: const FaIcon(
+                              FontAwesomeIcons.google,
+                              size: 20,
+                              color: Color(0xFFDB4437),
+                            ),
+                            label: const Text(
+                              'Google',
+                              style: TextStyle(color: Color(0xFF1A2A4A)),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              side: const BorderSide(color: Color(0xFFDDE3F0)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          // TODO: Facebook Sign-In
-                        },
-                        icon: const FaIcon(
-                          FontAwesomeIcons.facebook,
-                          size: 20,
-                          color: Color(0xFF1877F2),
-                        ),
-                        label: const Text(
-                          'Facebook',
-                          style: TextStyle(color: Color(0xFF1A2A4A)),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          side: const BorderSide(color: Color(0xFFDDE3F0)),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: loading
+                                ? null
+                                : () => authController.signInWithFacebook(
+                                      userType: choose,
+                                    ),
+                            icon: const FaIcon(
+                              FontAwesomeIcons.facebook,
+                              size: 20,
+                              color: Color(0xFF1877F2),
+                            ),
+                            label: const Text(
+                              'Facebook',
+                              style: TextStyle(color: Color(0xFF1A2A4A)),
+                            ),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              side: const BorderSide(color: Color(0xFFDDE3F0)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                  ],
+                      ],
+                    );
+                  },
                 ),
       
                 const SizedBox(height: 28),
