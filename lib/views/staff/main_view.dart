@@ -3,12 +3,15 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:new_version/controllers/home/nav_controller.dart';
+import 'package:new_version/controllers/staff_controller.dart';
 import 'package:new_version/views/staff/home/staff_home_view.dart';
 import 'package:new_version/views/staff/profile/profile_view.dart';
 import 'package:new_version/widgets/common/custom_bottom_nav.dart';
 
 class MainView extends StatelessWidget {
-  MainView({super.key});
+  MainView({super.key}) {
+    Get.put(StaffController());
+  }
 
   final navController = Get.put(NavController());
 
