@@ -10,6 +10,7 @@ import 'package:new_version/views/screens/station_details_screen.dart';
 import 'package:new_version/views/widgets/driver_map_view.dart';
 import 'package:new_version/views/widgets/search_bar.dart';
 import 'package:new_version/views/widgets/station_card.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -38,6 +39,18 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
+  // ── Showcase style مشترك ──
+  TextStyle get _showcaseTitle => GoogleFonts.cairo(
+    color: AppColors.navyDark,
+    fontSize: 15,
+    fontWeight: FontWeight.bold,
+  );
+
+  TextStyle get _showcaseDesc => GoogleFonts.cairo(
+    color: AppColors.navyDark,
+    fontSize: 13,
+  );
+
   @override
   Widget build(BuildContext context) {
     return Obx(() {
@@ -48,35 +61,79 @@ class _HomeScreenState extends State<HomeScreen> {
 
       return Stack(
         children: [
-          const DriverMapView(),
+          // ── Showcase 1: الخريطة ──
+          Showcase(
+            key: _homeController.mapKey,
+            title: 'خريطة المحطات',
+            description: 'شوف كل محطات الوقود القريبة منك على الخريطة',
+            titleTextStyle: _showcaseTitle,
+            descTextStyle: _showcaseDesc,
+            tooltipBackgroundColor: AppColors.white,
+            targetShapeBorder: const RoundedRectangleBorder(),
+            child: const DriverMapView(),
+          ),
+
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
               child: Column(
                 children: [
-                  SearchBarWidget(
-                    controller: _searchController,
-                    onChanged: _stationController.search,
-                    onFilterTap: () => _homeController.changeTab(1),
+                  // ── Showcase 2: البحث ──
+                  Showcase(
+                    key: _homeController.searchKey,
+                    title: 'ابحث عن محطة',
+                    description: 'ابحث بالاسم أو المنطقة للقي محطة قريبة منك',
+                    titleTextStyle: _showcaseTitle,
+                    descTextStyle: _showcaseDesc,
+                    tooltipBackgroundColor: AppColors.white,
+                    child: SearchBarWidget(
+                      controller: _searchController,
+                      onChanged: _stationController.search,
+                      onFilterTap: () => _homeController.changeTab(1),
+                    ),
                   ),
                 ],
               ),
             ),
           ),
+
           _buildSelectedStationSheet(),
+
           Positioned(
             bottom: 100,
             left: 16,
             child: Column(
               children: [
-                _MapActionButton(
-                  icon: Icons.my_location,
-                  onTap: _locationController.goToCurrentLocation,
+                // ── Showcase 3: موقعي ──
+                Showcase(
+                  key: _homeController.markerKey,
+                  title: 'موقعي الحالي',
+                  description: 'اضغط عشان الخريطة ترجع لموقعك تلقائياً',
+                  titleTextStyle: _showcaseTitle,
+                  descTextStyle: _showcaseDesc,
+                  tooltipBackgroundColor: AppColors.white,
+                  targetBorderRadius: BorderRadius.circular(AppRadius.sm),
+                  child: _MapActionButton(
+                    icon: Icons.my_location,
+                    onTap: _locationController.goToCurrentLocation,
+                  ),
                 ),
                 const SizedBox(height: 10),
-                _MapActionButton(
-                  icon: Icons.tune,
-                  onTap: () => Get.to(() => const DriverPreferencesScreen()),
+                // ── Showcase 4: الفلتر ──
+                Showcase(
+                  key: _homeController.filterKey,
+                  title: 'الفلتر والتفضيلات',
+                  description:
+                  'خصص عرض المحطات حسب الحالة والمسافة واللي يناسبك',
+                  titleTextStyle: _showcaseTitle,
+                  descTextStyle: _showcaseDesc,
+                  tooltipBackgroundColor: AppColors.white,
+                  targetBorderRadius: BorderRadius.circular(AppRadius.sm),
+                  child: _MapActionButton(
+                    icon: Icons.tune,
+                    onTap: () =>
+                        Get.to(() => const DriverPreferencesScreen()),
+                  ),
                 ),
               ],
             ),
@@ -91,14 +148,26 @@ class _HomeScreenState extends State<HomeScreen> {
       final station = _stationController.selectedStation.value;
       if (station == null) return const SizedBox.shrink();
 
+      // ── Showcase 5: كارت المحطة ──
       return Positioned(
         left: 16,
         right: 16,
         bottom: 16,
-        child: StationCard(
-          station: station,
-          compact: true,
-          onTap: () => Get.to(() => StationDetailsScreen(station: station)),
+        child: Showcase(
+          key: _homeController.favTabKey,
+          title: 'تفاصيل المحطة',
+          description:
+          'اضغط على المحطة عشان تشوف تفاصيلها وتبدأ الملاحة إليها',
+          titleTextStyle: _showcaseTitle,
+          descTextStyle: _showcaseDesc,
+          tooltipBackgroundColor: AppColors.white,
+          targetBorderRadius: BorderRadius.circular(16),
+          child: StationCard(
+            station: station,
+            compact: true,
+            onTap: () =>
+                Get.to(() => StationDetailsScreen(station: station)),
+          ),
         ),
       );
     });
@@ -170,7 +239,8 @@ class _HomeScreenState extends State<HomeScreen> {
               return Center(
                 child: Text(
                   'لا توجد محطات',
-                  style: GoogleFonts.cairo(color: AppColors.textSecondary),
+                  style:
+                  GoogleFonts.cairo(color: AppColors.textSecondary),
                 ),
               );
             }
@@ -179,7 +249,8 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.all(AppSpacing.md),
               itemCount: stations.length,
               separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (_, index) => StationCard(station: stations[index]),
+              itemBuilder: (_, index) =>
+                  StationCard(station: stations[index]),
             );
           }),
         ),

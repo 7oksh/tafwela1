@@ -10,38 +10,72 @@ import 'package:new_version/views/screens/favorites_screen.dart';
 import 'package:new_version/views/screens/home_screen.dart';
 import 'package:new_version/views/screens/profile_screen.dart';
 import 'package:new_version/views/widgets/driver_bottom_nav.dart';
+import 'package:showcaseview/showcaseview.dart';
 
-class DriverMainScreen extends StatelessWidget {
+class DriverMainScreen extends StatefulWidget {
   const DriverMainScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    if (!Get.isRegistered<HomeController>()) Get.put(HomeController());
-    if (!Get.isRegistered<LocationController>()) Get.put(LocationController());
-    if (!Get.isRegistered<StationController>()) Get.put(StationController());
-    if (!Get.isRegistered<FavoritesController>()) {
-      Get.put(FavoritesController());
-    }
-    if (!Get.isRegistered<DriverProfileController>()) {
-      Get.put(DriverProfileController());
-    }
+  State<DriverMainScreen> createState() => _DriverMainScreenState();
+}
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Obx(() {
-        switch (Get.find<HomeController>().currentTab.value) {
-          case 0:
-          case 1:
-            return const HomeScreen();
-          case 2:
-            return const FavoritesScreen(showBackButton: false);
-          case 3:
-            return const ProfileScreen(showBackButton: false);
-          default:
-            return const HomeScreen();
-        }
-      }),
-      bottomNavigationBar: const DriverBottomNav(),
+class _DriverMainScreenState extends State<DriverMainScreen> {
+  late HomeController _homeCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (!Get.isRegistered<HomeController>())
+      _homeCtrl = Get.put(HomeController());
+    else
+      _homeCtrl = Get.find<HomeController>();
+
+    if (!Get.isRegistered<LocationController>())
+      Get.put(LocationController());
+    if (!Get.isRegistered<StationController>())
+      Get.put(StationController());
+    if (!Get.isRegistered<FavoritesController>())
+      Get.put(FavoritesController());
+    if (!Get.isRegistered<DriverProfileController>())
+      Get.put(DriverProfileController());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ShowCaseWidget(
+      onFinish: () => _homeCtrl.markShowcaseDone(),
+      builder: (context) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!_homeCtrl.showcaseDone.value) {
+            ShowCaseWidget.of(context).startShowCase([
+              _homeCtrl.mapKey,
+              _homeCtrl.searchKey,
+              _homeCtrl.filterKey,
+              _homeCtrl.markerKey,
+              _homeCtrl.favTabKey,
+            ]);
+          }
+        });
+
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: Obx(() {
+            switch (_homeCtrl.currentTab.value) {
+              case 0:
+              case 1:
+                return const HomeScreen();
+              case 2:
+                return const FavoritesScreen(showBackButton: false);
+              case 3:
+                return const ProfileScreen(showBackButton: false);
+              default:
+                return const HomeScreen();
+            }
+          }),
+          bottomNavigationBar: const DriverBottomNav(),
+        );
+      },
     );
   }
 }
