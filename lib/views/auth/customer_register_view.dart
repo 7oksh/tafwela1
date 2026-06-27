@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 
 import 'package:new_version/controllers/auth/auth_controller.dart';
+import '../../models/user_role.dart';
 
 class CustomerRegisterView extends StatelessWidget {
   CustomerRegisterView({super.key});
@@ -196,11 +197,16 @@ class CustomerRegisterView extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: () {},
+                  Obx(
+                    () => Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                          onPressed: authController.isLoading.value
+                              ? null
+                              : () => authController.signInWithGoogle(
+                                    userType: UserRole.customer,
+                                  ),
                           icon: const FaIcon(FontAwesomeIcons.google, size: 18, color: Color(0xFFDB4437)),
                           label: const Text('Google', style: TextStyle(color: Color(0xFF1A2A4A))),
                           style: OutlinedButton.styleFrom(
@@ -213,7 +219,11 @@ class CustomerRegisterView extends StatelessWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () {},
+                          onPressed: authController.isLoading.value
+                              ? null
+                              : () => authController.signInWithFacebook(
+                                    userType: UserRole.customer,
+                                  ),
                           icon: const FaIcon(FontAwesomeIcons.facebook, size: 18, color: Color(0xFF1877F2)),
                           label: const Text('Facebook', style: TextStyle(color: Color(0xFF1A2A4A))),
                           style: OutlinedButton.styleFrom(
@@ -224,7 +234,7 @@ class CustomerRegisterView extends StatelessWidget {
                         ),
                       ),
                     ],
-                  ),
+                  )),
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
