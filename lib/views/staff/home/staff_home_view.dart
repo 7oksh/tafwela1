@@ -23,7 +23,7 @@ class _StaffHomeViewState extends State<StaffHomeView> {
   @override
   void initState() {
     super.initState();
-    _timerCtrl  = Get.put(TimerController());
+    _timerCtrl  = Get.find<TimerController>();
     _statusCtrl = Get.find<StatusController>();
 
     // ── ابدأ الـ Showcase أول مرة ──

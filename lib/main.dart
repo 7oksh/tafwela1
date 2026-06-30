@@ -3,17 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:new_version/controllers/map/map_controller.dart';
-import 'package:new_version/services/connectivity_service.dart';
-import 'package:new_version/views/splash/splash_view.dart';
 import 'package:new_version/services/notification_service.dart';
-import 'package:new_version/controllers/auth/auth_controller.dart';
-import 'package:new_version/controllers/home/nav_controller.dart';
-import 'package:new_version/controllers/notification/notification_controller.dart';
-import 'package:new_version/controllers/home/status_controller.dart';
-import 'package:new_version/controllers/home/timer_controller.dart';
-
+import 'package:new_version/services/connectivity_service.dart';
 import 'firebase_options.dart';
+import 'package:new_version/utils/routes.dart';
+import 'package:new_version/controllers/auth/auth_controller.dart';
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -25,11 +20,18 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         textTheme: GoogleFonts.cairoTextTheme(),
+        scaffoldBackgroundColor: const Color(0xFFF5F7FA),
       ),
       builder: (context, child) {
         return Directionality(textDirection: TextDirection.rtl, child: child!);
       },
-      home: const SplashView(),
+      getPages: AppRoutes.pages,
+      initialRoute: AppRoutes.splash,
+      initialBinding: BindingsBuilder(() {
+        Get.put(GetStorage('Settings'));
+        Get.putAsync(() async => ConnectivityService().init());
+        Get.put(AuthController());
+      }),
     );
   }
 }
@@ -39,12 +41,6 @@ Future<void> main() async {
   await NotificationService.init();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await GetStorage.init('Settings');
-  await Get.putAsync(() async => ConnectivityService().init());
-  Get.put(AuthController());
-  Get.put(StatusController());
-  Get.put(NotificationController());
-  Get.put(TimerController());
-  Get.put(NavController());
-  Get.put(MapController());
+
   runApp(const MyApp());
 }

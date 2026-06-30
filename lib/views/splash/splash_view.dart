@@ -30,7 +30,7 @@ class _SplashViewState extends State<SplashView> {
       Get.find<MapController>().setPosition(_currentPosition!);
     }
     await Future.delayed(const Duration(seconds: 5));
-    final OnboardingController controller = Get.put(OnboardingController());
+    final OnboardingController controller = Get.find<OnboardingController>();
     if (controller.isFirstTime()) {
       Get.off(const IntroView());
     } else {

@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:get_storage/get_storage.dart';
 
 class StatusController extends GetxController {
   var selectedStatus = "".obs;
   final showcaseDone = false.obs;
 
+  final box = Get.find<GetStorage>();
+
   // ── Showcase Keys ──
-  final GlobalKey countdownKey  = GlobalKey();
+  final GlobalKey countdownKey = GlobalKey();
   final GlobalKey statusGridKey = GlobalKey();
-  final GlobalKey updateBtnKey  = GlobalKey();
-  final GlobalKey warningKey    = GlobalKey();
+  final GlobalKey updateBtnKey = GlobalKey();
+  final GlobalKey warningKey = GlobalKey();
 
   @override
   void onInit() {
@@ -18,15 +20,13 @@ class StatusController extends GetxController {
     _loadShowcaseStatus();
   }
 
-  Future<void> _loadShowcaseStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    showcaseDone.value = prefs.getBool('staff_showcase_done') ?? false;
+  void _loadShowcaseStatus() {
+    showcaseDone.value = box.read('staff_showcase_done') ?? false;
   }
 
   Future<void> markShowcaseDone() async {
     showcaseDone.value = true;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('staff_showcase_done', true);
+    await box.write('staff_showcase_done', true);
   }
 
   void selectStatus(String status) {

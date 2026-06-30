@@ -32,9 +32,6 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!Get.isRegistered<DriverProfileController>()) {
-      Get.put(DriverProfileController());
-    }
     final profile = Get.find<DriverProfileController>();
 
     return Scaffold(

@@ -25,7 +25,7 @@ Widget _buildAvatarImage(String value) {
 class HeaderWidget extends StatelessWidget {
   HeaderWidget({super.key});
 
-  final notificationController = Get.put(NotificationController());
+  final notificationController = Get.find<NotificationController>();
   final navController = Get.find<NavController>();
 
   @override

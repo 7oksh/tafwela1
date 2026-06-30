@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:new_version/controllers/home/nav_controller.dart';
 import 'package:new_version/controllers/home/status_controller.dart';
-import 'package:new_version/controllers/staff_controller.dart';
 import 'package:new_version/views/staff/home/crowd_times_view.dart';
 import 'package:new_version/views/staff/home/staff_home_view.dart';
 import 'package:new_version/views/staff/profile/profile_view.dart';
@@ -25,8 +23,7 @@ class _MainViewState extends State<MainView> {
   @override
   void initState() {
     super.initState();
-    Get.put(StaffController());
-    _navController = Get.put(NavController());
+    _navController = Get.find<NavController>();
     _statusCtrl    = Get.find<StatusController>();
   }
 
