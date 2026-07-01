@@ -26,9 +26,11 @@ class _StaffHomeViewState extends State<StaffHomeView> {
     _timerCtrl  = Get.find<TimerController>();
     _statusCtrl = Get.find<StatusController>();
 
+    // ابدأ التايمر فقط عند دخول الموظف لصفحة الرئيسية
+    _timerCtrl.startTimer();
+
     // ── ابدأ الـ Showcase أول مرة ──
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // لو عندك shared_prefs check حطه هنا
       ShowCaseWidget.of(context).startShowCase([
         _statusCtrl.countdownKey,
         _statusCtrl.statusGridKey,

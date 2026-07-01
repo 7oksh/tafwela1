@@ -21,13 +21,15 @@ class TimerController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    startTimer();
+    // تم إزالة startTimer() من هنا لمنعه من البدء تلقائياً عند تشغيل التطبيق
   }
 
   // تشغيل التايمر
   void startTimer() {
+    // نمنع تشغيل تايمر جديد لو كان فيه واحد شغال أصلاً
+    if (timer != null && timer!.isActive) return;
+    
     timer?.cancel();
-
     timer = Timer.periodic(
       const Duration(seconds: 1),
       (t) {

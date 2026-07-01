@@ -285,7 +285,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                 _firstNameCtrl),
             _buildField(
                 'اسم العائلة', 'أدخل اسم العائلة', _lastNameCtrl),
-            _buildField('رقم الهاتف', '+966xxxxxxxxx', _phoneCtrl,
+            _buildField('رقم الهاتف', '+20xxxxxxxxx', _phoneCtrl,
                 type: TextInputType.phone),
 
             const SizedBox(height: 32),
