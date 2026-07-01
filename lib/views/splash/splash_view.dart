@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:new_version/controllers/map/map_controller.dart';
-import 'package:new_version/views/intro/intro_view.dart';
-import '../../controllers/settings/onboarding_controller.dart';
+import 'package:new_version/utils/routes.dart';
 import '../auth/choose_view.dart';
 
 class SplashView extends StatefulWidget {
@@ -30,9 +30,12 @@ class _SplashViewState extends State<SplashView> {
       Get.find<MapController>().setPosition(_currentPosition!);
     }
     await Future.delayed(const Duration(seconds: 5));
-    final OnboardingController controller = Get.find<OnboardingController>();
-    if (controller.isFirstTime()) {
-      Get.off(const IntroView());
+    
+    final box = GetStorage('Settings');
+    final isFirstTime = box.read('isFirstTime') ?? true;
+    
+    if (isFirstTime) {
+      Get.offNamed(AppRoutes.intro);
     } else {
       Get.off(() => const ChooseView());
     }

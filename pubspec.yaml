@@ -55,8 +55,9 @@ dependencies:
   url_launcher: ^6.3.2
   firebase_storage: ^13.4.3
   image_cropper: ^12.2.1
-  google_maps_flutter: ^2.12.1
-  flutter_polyline_points: ^3.1.0
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  http: ^1.4.0
   showcaseview: ^5.1.0
 
 dev_dependencies:

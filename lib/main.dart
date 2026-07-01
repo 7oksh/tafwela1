@@ -29,7 +29,6 @@ class MyApp extends StatelessWidget {
       initialRoute: AppRoutes.splash,
       initialBinding: BindingsBuilder(() {
         Get.put(GetStorage('Settings'));
-        Get.putAsync(() async => ConnectivityService().init());
         Get.put(AuthController());
       }),
     );
@@ -41,6 +40,9 @@ Future<void> main() async {
   await NotificationService.init();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await GetStorage.init('Settings');
+
+  // Initialize async services BEFORE runApp to guarantee dependency order
+  await Get.putAsync(() async => ConnectivityService().init());
 
   runApp(const MyApp());
 }

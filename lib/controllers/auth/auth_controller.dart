@@ -7,10 +7,9 @@ import 'package:new_version/models/user_role.dart';
 import 'package:new_version/utils/social_auth_config.dart';
 import 'package:new_version/views/auth/login_view.dart';
 import 'package:new_version/views/auth/pending_view.dart';
-import 'package:new_version/views/staff/main_view.dart';
 import 'package:new_version/views/auth/blocked_employee_view.dart';
 import 'package:new_version/views/admin/admin_main_view.dart';
-import 'package:new_version/views/screens/driver_main_screen.dart';
+import 'package:new_version/utils/routes.dart';
 import '../../services/connectivity_service.dart';
 
 class AuthController extends GetxController {
@@ -137,7 +136,7 @@ class AuthController extends GetxController {
       if (staffDoc.exists) {
         final status = staffDoc.data()?['status'];
         if (status == 'approved') {
-          Get.offAll(() => MainView());
+          Get.offAllNamed(AppRoutes.staffMain);
         } else if (status == 'denied') {
           Get.offAll(() => const BlockedEmployeeView());
         } else {
@@ -156,7 +155,7 @@ class AuthController extends GetxController {
     } else {
       final userDoc = await _firestore.collection('users').doc(uid).get();
       if (userDoc.exists) {
-        Get.offAll(() => const DriverMainScreen());
+        Get.offAllNamed(AppRoutes.driverMain);
       } else {
         Get.snackbar('خطأ', 'حسابك مش مسجل كسائق');
       }
@@ -186,7 +185,7 @@ class AuthController extends GetxController {
         'status': 'approved',
         'createdAt': FieldValue.serverTimestamp(),
       });
-      Get.offAll(() => const DriverMainScreen());
+      Get.offAllNamed(AppRoutes.driverMain);
     } on FirebaseAuthException catch (e) {
       _handleAuthError(e);
     } finally {

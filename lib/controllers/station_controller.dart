@@ -2,17 +2,22 @@ import 'package:get/get.dart';
 import 'package:new_version/controllers/location_controller.dart';
 import 'package:new_version/models/station_model.dart';
 import 'package:new_version/services/database_service.dart';
+import 'package:new_version/services/osrm_service.dart';
+import 'package:new_version/services/overpass_service.dart';
 
 class StationController extends GetxController {
   StationController({DatabaseService? databaseService})
       : _databaseService = databaseService ?? DatabaseService();
 
   final DatabaseService _databaseService;
+  final OverpassService _overpassService = OverpassService();
+  final OsrmService _osrmService = OsrmService();
 
   final stations = <StationModel>[].obs;
   final filteredStations = <StationModel>[].obs;
   final selectedStation = Rxn<StationModel>();
   final isLoading = false.obs;
+  final isFindingFastest = false.obs;
   final searchQuery = ''.obs;
 
   @override
@@ -76,6 +81,68 @@ class StationController extends GetxController {
       return stations.firstWhere((s) => s.id == id);
     } catch (_) {
       return null;
+    }
+  }
+
+  // ── Find the nearest & fastest gas station ────────────────────────────────
+
+  /// Fetches nearby stations from Overpass, calculates driving route via OSRM
+  /// for each, sorts by duration, and selects the fastest one.
+  Future<void> findFastestNearbyStation() async {
+    if (!Get.isRegistered<LocationController>()) return;
+    final location = Get.find<LocationController>();
+    final userLat = location.currentLatLng.latitude;
+    final userLng = location.currentLatLng.longitude;
+
+    isFindingFastest.value = true;
+    try {
+      // 1. Fetch nearby fuel stations from Overpass API
+      final nearby =
+          await _overpassService.fetchNearbyStations(userLat, userLng);
+
+      if (nearby.isEmpty) {
+        Get.snackbar('تنبيه', 'لم يتم العثور على محطات وقود قريبة');
+        return;
+      }
+
+      // 2. Get driving route for each station via OSRM
+      final List<StationModel> routed = [];
+      for (final station in nearby) {
+        final route = await _osrmService.getRoute(
+          userLat,
+          userLng,
+          station.latitude,
+          station.longitude,
+        );
+        if (route != null) {
+          routed.add(station.copyWith(
+            duration: route.durationSeconds,
+            routePolyline: route.polyline,
+            distanceKm: route.distanceMeters / 1000,
+          ));
+        } else {
+          routed.add(station.copyWith(
+            distanceKm: location.distanceTo(
+              lat: station.latitude,
+              lng: station.longitude,
+            ),
+          ));
+        }
+      }
+
+      // 3. Sort by driving duration (ascending — fastest first)
+      routed.sort((a, b) => a.duration.compareTo(b.duration));
+
+      // 4. Update reactive state
+      stations.assignAll(routed);
+      _applyFilter();
+      if (routed.isNotEmpty) {
+        selectedStation.value = routed.first;
+      }
+    } catch (e) {
+      Get.snackbar('خطأ', 'تعذر البحث عن المحطات القريبة');
+    } finally {
+      isFindingFastest.value = false;
     }
   }
 }

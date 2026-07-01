@@ -1,3 +1,4 @@
+import 'package:latlong2/latlong.dart';
 import 'package:new_version/models/fuel_type_model.dart';
 
 enum CrowdStatus { low, medium, high, none }
@@ -15,6 +16,8 @@ class StationModel {
   final List<FuelTypeModel> fuelTypes;
   final List<String> services;
   final bool isOpen;
+  final int duration;
+  final List<LatLng> routePolyline;
 
   const StationModel({
     required this.id,
@@ -29,6 +32,8 @@ class StationModel {
     required this.fuelTypes,
     this.services = const [],
     this.isOpen = true,
+    this.duration = 0,
+    this.routePolyline = const [],
   });
 
   factory StationModel.fromMap(Map<String, dynamic> map) {
@@ -51,6 +56,17 @@ class StationModel {
               .toList() ??
           [],
       isOpen: map['isOpen'] as bool? ?? true,
+      duration: (map['duration'] as num?)?.toInt() ?? 0,
+      routePolyline: (map['routePolyline'] as List<dynamic>?)
+              ?.map((e) {
+                final m = e as Map<String, dynamic>;
+                return LatLng(
+                  (m['lat'] as num).toDouble(),
+                  (m['lng'] as num).toDouble(),
+                );
+              })
+              .toList() ??
+          [],
     );
   }
 
@@ -77,9 +93,18 @@ class StationModel {
         'fuelTypes': fuelTypes.map((e) => e.toMap()).toList(),
         'services': services,
         'isOpen': isOpen,
+        'duration': duration,
+        'routePolyline': routePolyline
+            .map((p) => {'lat': p.latitude, 'lng': p.longitude})
+            .toList(),
       };
 
-  StationModel copyWith({double? distanceKm, CrowdStatus? crowdStatus}) {
+  StationModel copyWith({
+    double? distanceKm,
+    CrowdStatus? crowdStatus,
+    int? duration,
+    List<LatLng>? routePolyline,
+  }) {
     return StationModel(
       id: id,
       name: name,
@@ -93,6 +118,8 @@ class StationModel {
       fuelTypes: fuelTypes,
       services: services,
       isOpen: isOpen,
+      duration: duration ?? this.duration,
+      routePolyline: routePolyline ?? this.routePolyline,
     );
   }
 }

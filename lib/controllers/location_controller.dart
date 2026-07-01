@@ -1,8 +1,8 @@
+import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:new_version/services/location_service.dart';
-import 'package:new_version/services/maps_service.dart';
 
 class LocationController extends GetxController {
   LocationController({LocationService? locationService})
@@ -11,11 +11,16 @@ class LocationController extends GetxController {
   final LocationService _locationService;
 
   final currentPosition = Rxn<Position>();
-  final mapController = Rxn<GoogleMapController>();
+  final isMapReady = false.obs;
+
+  /// flutter_map controller — created here, shared with the FlutterMap widget.
+  final mapController = MapController();
+
+  static const defaultLocation = LatLng(30.0444, 31.2357);
 
   LatLng get currentLatLng {
     final pos = currentPosition.value;
-    if (pos == null) return MapsService.defaultLocation;
+    if (pos == null) return defaultLocation;
     return LatLng(pos.latitude, pos.longitude);
   }
 
@@ -29,30 +34,25 @@ class LocationController extends GetxController {
     final position = await _locationService.getCurrentPosition();
     if (position != null) {
       currentPosition.value = position;
-      await _animateToCurrentLocation();
+      _moveToCurrentLocation();
     }
   }
 
-  Future<void> _animateToCurrentLocation() async {
-    final controller = mapController.value;
-    if (controller == null) return;
-    await controller.animateCamera(
-      CameraUpdate.newLatLngZoom(currentLatLng, 14),
-    );
+  void onMapReady() {
+    isMapReady.value = true;
+    _moveToCurrentLocation();
   }
 
-  void onMapCreated(GoogleMapController controller) {
-    mapController.value = controller;
-    if (currentPosition.value != null) {
-      _animateToCurrentLocation();
-    }
+  void _moveToCurrentLocation() {
+    if (!isMapReady.value) return;
+    mapController.move(currentLatLng, 14);
   }
 
   Future<void> goToCurrentLocation() async {
     if (currentPosition.value == null) {
       await fetchLocation();
     } else {
-      await _animateToCurrentLocation();
+      _moveToCurrentLocation();
     }
   }
 
@@ -65,11 +65,5 @@ class LocationController extends GetxController {
       toLat: lat,
       toLng: lng,
     );
-  }
-
-  @override
-  void onClose() {
-    mapController.value?.dispose();
-    super.onClose();
   }
 }

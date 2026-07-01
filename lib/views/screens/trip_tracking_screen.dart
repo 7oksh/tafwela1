@@ -1,18 +1,16 @@
 import 'dart:async';
-import 'dart:math' as math;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:new_version/controllers/location_controller.dart';
 import 'package:new_version/models/station_model.dart';
+import 'package:new_version/services/osrm_service.dart';
 import 'package:new_version/utils/constants.dart';
 import 'package:new_version/utils/helpers.dart';
-import 'package:new_version/utils/maps_config.dart';
 
 class TripTrackingScreen extends StatefulWidget {
   const TripTrackingScreen({super.key, required this.station});
@@ -24,11 +22,11 @@ class TripTrackingScreen extends StatefulWidget {
 }
 
 class _TripTrackingScreenState extends State<TripTrackingScreen> {
-  final Completer<GoogleMapController> _mapCompleter = Completer();
-  GoogleMapController? _mapController;
+  final MapController _mapController = MapController();
+  bool _isMapReady = false;
 
   // Route data
-  final List<LatLng> _polylineCoords = [];
+  List<LatLng> _polylineCoords = [];
   bool _isLoadingRoute = true;
   String? _routeError;
 
@@ -42,6 +40,9 @@ class _TripTrackingScreenState extends State<TripTrackingScreen> {
 
   late final LatLng _destination;
 
+  /// latlong2 distance calculator — replaces the custom haversine formula.
+  static const _distance = Distance();
+
   @override
   void initState() {
     super.initState();
@@ -52,7 +53,8 @@ class _TripTrackingScreenState extends State<TripTrackingScreen> {
 
     final locationController = Get.find<LocationController>();
     _currentLatLng = locationController.currentLatLng;
-    _remainingKm = _haversineKm(_currentLatLng, _destination);
+    _remainingKm =
+        _distance.as(LengthUnit.Kilometer, _currentLatLng, _destination);
     _remainingMinutes = _estimateMinutes(_remainingKm);
 
     _fetchRoute();
@@ -62,7 +64,6 @@ class _TripTrackingScreenState extends State<TripTrackingScreen> {
   @override
   void dispose() {
     _locationSub?.cancel();
-    _mapController?.dispose();
     super.dispose();
   }
 
@@ -70,65 +71,27 @@ class _TripTrackingScreenState extends State<TripTrackingScreen> {
 
   Future<void> _fetchRoute() async {
     try {
-      final polylinePoints = PolylinePoints(apiKey: MapsConfig.apiKey);
-      List<PointLatLng> points = [];
-
-      if (kIsWeb) {
-        // Web: Directions API blocks CORS → use Routes API (CORS-enabled).
-        // Requires "Routes API" to be enabled in Google Cloud Console.
-        final response = await polylinePoints.getRouteBetweenCoordinatesV2(
-          request: RoutesApiRequest(
-            origin: PointLatLng(
-                _currentLatLng.latitude, _currentLatLng.longitude),
-            destination: PointLatLng(
-                _destination.latitude, _destination.longitude),
-            travelMode: TravelMode.driving,
-          ),
-        );
-        if (response.routes.isNotEmpty) {
-          final encoded = response.routes.first.polylineEncoded;
-          if (encoded != null && encoded.isNotEmpty) {
-            points = PolylinePoints.decodePolyline(encoded);
-          }
-        }
-        debugPrint('Routes API routes count: ${response.routes.length}');
-        debugPrint('Routes API error: ${response.errorMessage}');
-      } else {
-        // Mobile: Directions API works fine without CORS restrictions.
-        // ignore: deprecated_member_use
-        final result = await polylinePoints.getRouteBetweenCoordinates(
-          // ignore: deprecated_member_use
-          request: PolylineRequest(
-            origin: PointLatLng(
-                _currentLatLng.latitude, _currentLatLng.longitude),
-            destination: PointLatLng(
-                _destination.latitude, _destination.longitude),
-            mode: TravelMode.driving,
-          ),
-        );
-        points = result.points;
-        debugPrint('Directions API status: ${result.status}');
-        debugPrint('Directions API points: ${result.points.length}');
-      }
+      final result = await OsrmService().getRoute(
+        _currentLatLng.latitude,
+        _currentLatLng.longitude,
+        _destination.latitude,
+        _destination.longitude,
+      );
 
       if (!mounted) return;
 
-      if (points.isNotEmpty) {
-        final coords =
-            points.map((p) => LatLng(p.latitude, p.longitude)).toList();
+      if (result != null && result.polyline.isNotEmpty) {
         setState(() {
-          _polylineCoords
-            ..clear()
-            ..addAll(coords);
+          _polylineCoords = result.polyline;
           _isLoadingRoute = false;
           _routeError = null;
+          _remainingMinutes = (result.durationSeconds / 60).ceil();
+          _remainingKm = result.distanceMeters / 1000;
         });
-        _fitBounds(coords);
+        _fitBounds(_polylineCoords);
       } else {
         setState(() {
-          _polylineCoords
-            ..clear()
-            ..addAll([_currentLatLng, _destination]);
+          _polylineCoords = [_currentLatLng, _destination];
           _isLoadingRoute = false;
           _routeError = 'تعذّر جلب الطريق، يُعرض خط مستقيم';
         });
@@ -138,9 +101,7 @@ class _TripTrackingScreenState extends State<TripTrackingScreen> {
       debugPrint('Route fetch exception: $e');
       if (!mounted) return;
       setState(() {
-        _polylineCoords
-          ..clear()
-          ..addAll([_currentLatLng, _destination]);
+        _polylineCoords = [_currentLatLng, _destination];
         _isLoadingRoute = false;
         _routeError = 'تعذّر الاتصال، يُعرض خط مستقيم';
       });
@@ -148,9 +109,8 @@ class _TripTrackingScreenState extends State<TripTrackingScreen> {
     }
   }
 
-  Future<void> _fitBounds(List<LatLng> points) async {
-    if (points.isEmpty) return;
-    final ctrl = await _mapCompleter.future;
+  void _fitBounds(List<LatLng> points) {
+    if (points.isEmpty || !_isMapReady) return;
 
     double minLat = points.first.latitude;
     double maxLat = points.first.latitude;
@@ -158,19 +118,21 @@ class _TripTrackingScreenState extends State<TripTrackingScreen> {
     double maxLng = points.first.longitude;
 
     for (final p in points) {
-      minLat = math.min(minLat, p.latitude);
-      maxLat = math.max(maxLat, p.latitude);
-      minLng = math.min(minLng, p.longitude);
-      maxLng = math.max(maxLng, p.longitude);
+      if (p.latitude < minLat) minLat = p.latitude;
+      if (p.latitude > maxLat) maxLat = p.latitude;
+      if (p.longitude < minLng) minLng = p.longitude;
+      if (p.longitude > maxLng) maxLng = p.longitude;
     }
 
-    ctrl.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        LatLngBounds(
-          southwest: LatLng(minLat, minLng),
-          northeast: LatLng(maxLat, maxLng),
-        ),
-        80, // padding px
+    final bounds = LatLngBounds(
+      LatLng(minLat, minLng),
+      LatLng(maxLat, maxLng),
+    );
+
+    _mapController.fitCamera(
+      CameraFit.bounds(
+        bounds: bounds,
+        padding: const EdgeInsets.all(80),
       ),
     );
   }
@@ -186,7 +148,8 @@ class _TripTrackingScreenState extends State<TripTrackingScreen> {
     ).listen((pos) {
       if (!mounted || _cancelled) return;
       final newLatLng = LatLng(pos.latitude, pos.longitude);
-      final dist = _haversineKm(newLatLng, _destination);
+      final dist =
+          _distance.as(LengthUnit.Kilometer, newLatLng, _destination);
 
       setState(() {
         _currentLatLng = newLatLng;
@@ -195,27 +158,14 @@ class _TripTrackingScreenState extends State<TripTrackingScreen> {
         if (dist < 0.05) _arrived = true;
       });
 
-      // Smoothly pan camera to follow user
-      _mapController?.animateCamera(
-        CameraUpdate.newLatLng(newLatLng),
-      );
+      // Smoothly follow user
+      if (_isMapReady) {
+        _mapController.move(newLatLng, _mapController.camera.zoom);
+      }
     });
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────────
-
-  double _haversineKm(LatLng a, LatLng b) {
-    const r = 6371.0;
-    final dlat = _rad(b.latitude - a.latitude);
-    final dlng = _rad(b.longitude - a.longitude);
-    final h = math.pow(math.sin(dlat / 2), 2) +
-        math.cos(_rad(a.latitude)) *
-            math.cos(_rad(b.latitude)) *
-            math.pow(math.sin(dlng / 2), 2);
-    return r * 2 * math.asin(math.sqrt(h));
-  }
-
-  double _rad(double deg) => deg * math.pi / 180;
 
   int _estimateMinutes(double km) {
     // ~30 km/h average in city traffic
@@ -232,61 +182,95 @@ class _TripTrackingScreenState extends State<TripTrackingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final polylines = _polylineCoords.isNotEmpty
-        ? {
-            Polyline(
-              polylineId: const PolylineId('route'),
-              points: _polylineCoords,
-              color: AppColors.primaryBlue,
-              width: 5,
-              patterns: [],
-              jointType: JointType.round,
-              endCap: Cap.roundCap,
-              startCap: Cap.roundCap,
-            ),
-          }
-        : <Polyline>{};
-
-    final markers = {
-      Marker(
-        markerId: const MarkerId('destination'),
-        position: _destination,
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
-        infoWindow: InfoWindow(title: widget.station.name),
-      ),
-      Marker(
-        markerId: const MarkerId('current'),
-        position: _currentLatLng,
-        icon:
-            BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-        infoWindow: const InfoWindow(title: 'موقعك الحالي'),
-      ),
-    };
-
     return Scaffold(
       backgroundColor: AppColors.background,
       extendBodyBehindAppBar: true,
       appBar: _buildAppBar(),
       body: Stack(
         children: [
-          GoogleMap(
-            initialCameraPosition: CameraPosition(
-              target: LatLng(
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: LatLng(
                 (_currentLatLng.latitude + _destination.latitude) / 2,
                 (_currentLatLng.longitude + _destination.longitude) / 2,
               ),
-              zoom: 13,
+              initialZoom: 13,
+              onMapReady: () {
+                _isMapReady = true;
+                if (_polylineCoords.isNotEmpty) {
+                  _fitBounds(_polylineCoords);
+                }
+              },
             ),
-            onMapCreated: (c) {
-              _mapController = c;
-              if (!_mapCompleter.isCompleted) _mapCompleter.complete(c);
-            },
-            markers: markers,
-            polylines: polylines,
-            myLocationEnabled: true,
-            myLocationButtonEnabled: false,
-            zoomControlsEnabled: false,
-            mapToolbarEnabled: false,
+            children: [
+              TileLayer(
+                urlTemplate:
+                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.tafwela.app',
+              ),
+              if (_polylineCoords.isNotEmpty)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: _polylineCoords,
+                      color: AppColors.primaryBlue,
+                      strokeWidth: 5,
+                    ),
+                  ],
+                ),
+              MarkerLayer(
+                markers: [
+                  // Destination marker
+                  Marker(
+                    point: _destination,
+                    width: 44,
+                    height: 44,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryBlue,
+                        shape: BoxShape.circle,
+                        border:
+                            Border.all(color: AppColors.white, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primaryBlue
+                                .withValues(alpha: 0.4),
+                            blurRadius: 10,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.local_gas_station,
+                        color: AppColors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                  // Current position
+                  Marker(
+                    point: _currentLatLng,
+                    width: 24,
+                    height: 24,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.success,
+                        shape: BoxShape.circle,
+                        border:
+                            Border.all(color: AppColors.white, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                AppColors.success.withValues(alpha: 0.4),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
 
           // Loading indicator while fetching route
@@ -463,10 +447,12 @@ class _TripTrackingScreenState extends State<TripTrackingScreen> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Helpers.crowdStatusColor(widget.station.crowdStatus)
-                      .withValues(alpha: 0.12),
+                  color:
+                      Helpers.crowdStatusColor(widget.station.crowdStatus)
+                          .withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(AppRadius.xl),
                 ),
                 child: Text(
@@ -474,7 +460,8 @@ class _TripTrackingScreenState extends State<TripTrackingScreen> {
                   style: GoogleFonts.cairo(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
-                    color: Helpers.crowdStatusColor(widget.station.crowdStatus),
+                    color: Helpers.crowdStatusColor(
+                        widget.station.crowdStatus),
                   ),
                 ),
               ),
@@ -498,9 +485,7 @@ class _TripTrackingScreenState extends State<TripTrackingScreen> {
               ),
               _InfoTile(
                 icon: Icons.timer_outlined,
-                value: _arrived
-                    ? '0 د'
-                    : '$_remainingMinutes د',
+                value: _arrived ? '0 د' : '$_remainingMinutes د',
                 label: 'الوقت المتوقع',
               ),
               _InfoTile(
@@ -579,7 +564,7 @@ class _Banner extends StatelessWidget {
               ),
             ),
           ),
-          ?trailing,
+          if (trailing != null) trailing!,
         ],
       ),
     );

@@ -27,8 +27,11 @@ import 'package:new_version/controllers/home/status_controller.dart';
 import 'package:new_version/controllers/notification/notification_controller.dart';
 import 'package:new_version/controllers/home/timer_controller.dart';
 
+import '../views/intro/intro_view.dart';
+
 abstract final class AppRoutes {
   static const splash = '/splash';
+  static const intro = '/intro';
   static const driverMain = '/driver';
   static const driverPreferences = '/driver/preferences';
   static const tripTracking = '/trip-tracking';
@@ -46,6 +49,12 @@ abstract final class AppRoutes {
       page: () => const SplashView(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => MapController());
+      }),
+    ),
+    GetPage(
+      name: intro,
+      page: () => const IntroView(),
+      binding: BindingsBuilder(() {
         Get.lazyPut(() => OnboardingController());
       }),
     ),
