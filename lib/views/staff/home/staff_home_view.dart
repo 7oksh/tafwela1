@@ -158,7 +158,7 @@ class _StaffHomeViewState extends State<StaffHomeView> {
                                 BoxShadow(
                                   color: const Color(
                                     0xFF4A6CF7,
-                                  ).withOpacity(0.25),
+                                  ).withValues(alpha: 0.25),
                                   blurRadius: 12,
                                   offset: const Offset(0, 6),
                                 ),
