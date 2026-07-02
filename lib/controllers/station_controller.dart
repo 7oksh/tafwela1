@@ -10,8 +10,8 @@ class StationController extends GetxController {
       : _databaseService = databaseService ?? DatabaseService();
 
   final DatabaseService _databaseService;
-  final OverpassService _overpassService = OverpassService();
-  final OsrmService _osrmService = OsrmService();
+  final OverpassService _overpassService = Get.find<OverpassService>();
+  final OsrmService _osrmService = Get.find<OsrmService>();
 
   final stations = <StationModel>[].obs;
   final filteredStations = <StationModel>[].obs;
@@ -35,6 +35,12 @@ class StationController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  void refreshDistances() {
+    if (stations.isEmpty) return;
+    stations.assignAll(_withDistance(stations.toList()));
+    _applyFilter();
   }
 
   List<StationModel> _withDistance(List<StationModel> list) {

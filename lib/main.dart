@@ -9,6 +9,9 @@ import 'firebase_options.dart';
 import 'package:new_version/utils/routes.dart';
 import 'package:new_version/controllers/auth/auth_controller.dart';
 import 'package:new_version/services/biometric_auth_service.dart';
+import 'package:dio/dio.dart';
+import 'package:new_version/services/overpass_service.dart';
+import 'package:new_version/services/osrm_service.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -31,6 +34,15 @@ class MyApp extends StatelessWidget {
       initialBinding: BindingsBuilder(() {
         Get.put(GetStorage('Settings'));
         Get.put(AuthController());
+        
+        final dio = Dio(BaseOptions(
+          connectTimeout: const Duration(seconds: 15),
+          receiveTimeout: const Duration(seconds: 15),
+          sendTimeout: const Duration(seconds: 15),
+        ));
+        Get.put(dio);
+        Get.put(OverpassService(dio));
+        Get.put(OsrmService(dio));
       }),
     );
   }

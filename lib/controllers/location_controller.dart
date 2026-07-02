@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:new_version/services/location_service.dart';
+import 'package:new_version/controllers/station_controller.dart';
 
 class LocationController extends GetxController {
   LocationController({LocationService? locationService})
@@ -30,11 +31,21 @@ class LocationController extends GetxController {
     fetchLocation();
   }
 
+  final isLocationLoading = true.obs;
+
   Future<void> fetchLocation() async {
-    final position = await _locationService.getCurrentPosition();
-    if (position != null) {
-      currentPosition.value = position;
-      _moveToCurrentLocation();
+    isLocationLoading.value = true;
+    try {
+      final position = await _locationService.getCurrentPosition();
+      if (position != null) {
+        currentPosition.value = position;
+        _moveToCurrentLocation();
+        if (Get.isRegistered<StationController>()) {
+          Get.find<StationController>().refreshDistances();
+        }
+      }
+    } finally {
+      isLocationLoading.value = false;
     }
   }
 

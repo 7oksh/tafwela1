@@ -36,6 +36,13 @@ class DriverMapView extends StatelessWidget {
       // Route polyline for selected station
       final routePoints = selected?.routePolyline ?? [];
 
+      if (locationCtrl.isLocationLoading.value &&
+          locationCtrl.currentPosition.value == null) {
+        return const Center(
+          child: CircularProgressIndicator(color: AppColors.primaryBlue),
+        );
+      }
+
       return Stack(
         children: [
           FlutterMap(

@@ -71,7 +71,7 @@ class _TripTrackingScreenState extends State<TripTrackingScreen> {
 
   Future<void> _fetchRoute() async {
     try {
-      final result = await OsrmService().getRoute(
+      final result = await Get.find<OsrmService>().getRoute(
         _currentLatLng.latitude,
         _currentLatLng.longitude,
         _destination.latitude,

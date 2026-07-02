@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:latlong2/latlong.dart';
 
 /// Result returned by [OsrmService.getRoute].
@@ -17,8 +17,11 @@ class OsrmRouteResult {
 
 /// Calculates driving routes via the public OSRM demo server.
 class OsrmService {
+  final Dio dio;
   static const _baseUrl =
       'https://router.project-osrm.org/route/v1/driving';
+
+  OsrmService(this.dio);
 
   /// Returns the driving route between two points, or `null` on failure.
   Future<OsrmRouteResult?> getRoute(
@@ -32,10 +35,10 @@ class OsrmService {
         '?overview=full&geometries=polyline';
 
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await dio.get(url);
       if (response.statusCode != 200) return null;
 
-      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = response.data is String ? jsonDecode(response.data) : response.data as Map<String, dynamic>;
       final routes = data['routes'] as List<dynamic>? ?? [];
       if (routes.isEmpty) return null;
 

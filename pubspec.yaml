@@ -57,12 +57,12 @@ dependencies:
   image_cropper: ^12.2.1
   flutter_map: ^7.0.2
   latlong2: ^0.9.1
-  http: ^1.4.0
   showcaseview: ^5.1.0
   floor: ^1.5.0
   sqlite3_flutter_libs: ^0.6.0+eol
   fl_chart: ^1.2.0
   local_auth: ^3.0.1
+  dio: ^5.10.0
 
 
 dev_dependencies:
