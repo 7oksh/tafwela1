@@ -26,43 +26,46 @@ class _MainViewState extends State<MainView> {
     super.initState();
     _navController = Get.find<NavController>();
     _statusCtrl    = Get.find<StatusController>();
+
+    ShowcaseView.register(
+      onFinish: () => _statusCtrl.markShowcaseDone(),
+    );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_statusCtrl.showcaseDone.value) {
+        ShowcaseView.get().startShowCase([
+          _statusCtrl.countdownKey,
+          _statusCtrl.statusGridKey,
+          _statusCtrl.updateBtnKey,
+        ]);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    ShowcaseView.get().unregister();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return ShowCaseWidget(
-      onFinish: () {
-        // _statusCtrl.markShowcaseDone();
-      },
-      builder: (context) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!_statusCtrl.showcaseDone.value) {
-            ShowCaseWidget.of(context).startShowCase([
-              _statusCtrl.countdownKey,
-              _statusCtrl.statusGridKey,
-              _statusCtrl.updateBtnKey,
-            ]);
-          }
-        });
-
-        return Scaffold(
-          body: Obx(() {
-            switch (_navController.currentIndex.value) {
-              case 0:
-                return StaffHomeView();
-              case 1:
-                return HistoryView();
-              case 2:
-                return ReportsView();
-              case 3:
-                return const ProfileView();
-              default:
-                return StaffHomeView();
-            }
-          }),
-          bottomNavigationBar: CustomBottomNav(),
-        );
-      },
+    return Scaffold(
+      body: Obx(() {
+        switch (_navController.currentIndex.value) {
+          case 0:
+            return StaffHomeView();
+          case 1:
+            return HistoryView();
+          case 2:
+            return ReportsView();
+          case 3:
+            return const ProfileView();
+          default:
+            return StaffHomeView();
+        }
+      }),
+      bottomNavigationBar: CustomBottomNav(),
     );
   }
 }

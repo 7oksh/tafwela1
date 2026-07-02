@@ -22,12 +22,12 @@ class HomeController extends GetxController {
   }
 
   void _loadShowcaseStatus() {
-    showcaseDone.value = box.read('showcase_done') ?? false;
+    showcaseDone.value = box.read('home_showcase_done') ?? false;
   }
 
   Future<void> markShowcaseDone() async {
     showcaseDone.value = true;
-    await box.write('showcase_done', true);
+    await box.write('home_showcase_done', true);
   }
 
   void changeTab(int index) {

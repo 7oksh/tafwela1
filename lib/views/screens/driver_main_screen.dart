@@ -21,45 +21,49 @@ class _DriverMainScreenState extends State<DriverMainScreen> {
   @override
   void initState() {
     super.initState();
-
     _homeCtrl = Get.find<HomeController>();
+
+    ShowcaseView.register(
+      onFinish: () => _homeCtrl.markShowcaseDone(),
+    );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_homeCtrl.showcaseDone.value) {
+        ShowcaseView.get().startShowCase([
+          _homeCtrl.mapKey,
+          _homeCtrl.searchKey,
+          _homeCtrl.filterKey,
+          _homeCtrl.markerKey,
+          _homeCtrl.favTabKey,
+        ]);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    ShowcaseView.get().unregister();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return ShowCaseWidget(
-      onFinish: () => _homeCtrl.markShowcaseDone(),
-      builder: (context) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!_homeCtrl.showcaseDone.value) {
-            ShowCaseWidget.of(context).startShowCase([
-              _homeCtrl.mapKey,
-              _homeCtrl.searchKey,
-              _homeCtrl.filterKey,
-              _homeCtrl.markerKey,
-              _homeCtrl.favTabKey,
-            ]);
-          }
-        });
-
-        return Scaffold(
-          backgroundColor: AppColors.background,
-          body: Obx(() {
-            switch (_homeCtrl.currentTab.value) {
-              case 0:
-              case 1:
-                return const HomeScreen();
-              case 2:
-                return const FavoritesScreen(showBackButton: false);
-              case 3:
-                return const ProfileScreen(showBackButton: false);
-              default:
-                return const HomeScreen();
-            }
-          }),
-          bottomNavigationBar: const DriverBottomNav(),
-        );
-      },
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: Obx(() {
+        switch (_homeCtrl.currentTab.value) {
+          case 0:
+          case 1:
+            return const HomeScreen();
+          case 2:
+            return const FavoritesScreen(showBackButton: false);
+          case 3:
+            return const ProfileScreen(showBackButton: false);
+          default:
+            return const HomeScreen();
+        }
+      }),
+      bottomNavigationBar: const DriverBottomNav(),
     );
   }
 }
