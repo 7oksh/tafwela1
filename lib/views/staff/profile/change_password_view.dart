@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:new_version/services/biometric_auth_service.dart';
 
 class ChangePasswordView extends StatelessWidget {
   ChangePasswordView({super.key});
@@ -145,7 +147,7 @@ class ChangePasswordView extends StatelessWidget {
                       borderRadius: BorderRadius.circular(22),
                     ),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
                     // Validation
                     if (!isValidPassword(newPasswordController.text)) {
                       Get.snackbar(
@@ -170,14 +172,40 @@ class ChangePasswordView extends StatelessWidget {
                       return;
                     }
 
-                    // Success
-                    Get.snackbar(
-                      "تم التحديث",
-                      "تم تغيير كلمة المرور بنجاح",
-                      backgroundColor: Colors.green,
-                      colorText: Colors.white,
-                      snackPosition: SnackPosition.BOTTOM,
-                    );
+                    final biometricAuth = Get.find<BiometricAuthService>();
+                    bool didAuthenticate = await biometricAuth.authenticate();
+                    if (!didAuthenticate) {
+                      return;
+                    }
+
+                    try {
+                      final user = FirebaseAuth.instance.currentUser;
+                      if (user == null) return;
+
+                      final credential = EmailAuthProvider.credential(
+                        email: user.email!,
+                        password: currentPasswordController.text,
+                      );
+                      await user.reauthenticateWithCredential(credential);
+                      await user.updatePassword(newPasswordController.text);
+
+                      Get.back();
+                      Get.snackbar(
+                        "تم التحديث",
+                        "تم تغيير كلمة المرور بنجاح",
+                        backgroundColor: Colors.green,
+                        colorText: Colors.white,
+                        snackPosition: SnackPosition.BOTTOM,
+                      );
+                    } on FirebaseAuthException catch (e) {
+                      Get.snackbar(
+                        'خطأ',
+                        e.message ?? 'فشل تحديث كلمة المرور',
+                        backgroundColor: Colors.red,
+                        colorText: Colors.white,
+                        snackPosition: SnackPosition.BOTTOM,
+                      );
+                    }
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,

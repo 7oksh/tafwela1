@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:new_version/utils/constants.dart';
 import 'package:new_version/views/widgets/custom_button.dart';
+import 'package:new_version/services/biometric_auth_service.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -49,6 +50,12 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
+
+      final biometricAuth = Get.find<BiometricAuthService>();
+      bool didAuthenticate = await biometricAuth.authenticate();
+      if (!didAuthenticate) {
+        return;
+      }
 
       final credential = EmailAuthProvider.credential(
         email: user.email!,

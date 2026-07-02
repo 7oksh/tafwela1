@@ -8,6 +8,7 @@ import 'package:new_version/services/connectivity_service.dart';
 import 'firebase_options.dart';
 import 'package:new_version/utils/routes.dart';
 import 'package:new_version/controllers/auth/auth_controller.dart';
+import 'package:new_version/services/biometric_auth_service.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -43,6 +44,7 @@ Future<void> main() async {
 
   // Initialize async services BEFORE runApp to guarantee dependency order
   await Get.putAsync(() async => ConnectivityService().init());
+  await Get.putAsync(() async => BiometricAuthService().init());
 
   runApp(const MyApp());
 }
