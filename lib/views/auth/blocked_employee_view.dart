@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:new_version/models/user_role.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:new_version/controllers/auth/auth_controller.dart';
+import 'package:new_version/utils/app_snackbar.dart';
 
 class BlockedEmployeeView extends StatelessWidget {
   const BlockedEmployeeView({super.key});
@@ -10,7 +11,7 @@ class BlockedEmployeeView extends StatelessWidget {
   Future<void> _launchWhatsApp() async {
     final Uri url = Uri.parse('https://wa.me/201004566145?text=مرحباً، أريد الاستفسار عن سبب إيقاف الحساب.');
     if (!await launchUrl(url)) {
-      Get.snackbar('خطأ', 'لا يمكن فتح واتساب');
+      AppSnackbar.error('لا يمكن فتح واتساب', title: 'خطأ');
     }
   }
 

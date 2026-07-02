@@ -2,9 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:new_version/utils/constants.dart';
 import 'package:new_version/views/widgets/custom_button.dart';
+import 'package:new_version/utils/app_snackbar.dart';
 import 'package:new_version/services/biometric_auth_service.dart';
+import 'package:new_version/utils/constants.dart';
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -38,11 +39,11 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 
   Future<void> _updatePassword() async {
     if (!_isValidPassword(_newController.text)) {
-      Get.snackbar('خطأ', 'كلمة المرور يجب أن تحتوي على 8 أحرف مع أرقام وحروف');
+      AppSnackbar.error('كلمة المرور يجب أن تحتوي على 8 أحرف مع أرقام وحروف', title: 'خطأ');
       return;
     }
     if (_newController.text != _confirmController.text) {
-      Get.snackbar('خطأ', 'كلمتا المرور غير متطابقتين');
+      AppSnackbar.error('كلمتا المرور غير متطابقتين', title: 'خطأ');
       return;
     }
 
@@ -65,9 +66,9 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       await user.updatePassword(_newController.text);
 
       Get.back();
-      Get.snackbar('تم', 'تم تحديث كلمة المرور بنجاح');
+      AppSnackbar.success('تم تحديث كلمة المرور بنجاح', title: 'تم');
     } on FirebaseAuthException catch (e) {
-      Get.snackbar('خطأ', e.message ?? 'فشل تحديث كلمة المرور');
+      AppSnackbar.error(e.message ?? 'فشل تحديث كلمة المرور', title: 'خطأ');
     } finally {
       _isLoading.value = false;
     }

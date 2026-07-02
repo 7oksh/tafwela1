@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:new_version/utils/constants.dart';
+import 'package:new_version/utils/app_snackbar.dart';
 
 class DriverPreferencesScreen extends StatefulWidget {
   const DriverPreferencesScreen({super.key});
@@ -53,12 +54,12 @@ class _DriverPreferencesScreenState extends State<DriverPreferencesScreen> {
     _box.write('pref_crowd_notify', _notifyCrowdChanges);
     _box.write('pref_max_dist', _maxDistance);
     Get.back();
-    Get.snackbar(
-      'تم الحفظ',
+    AppSnackbar.success(
       'تم حفظ تفضيلاتك بنجاح',
-      snackPosition: SnackPosition.BOTTOM,
+      title: 'تم الحفظ',
+      position: SnackPosition.BOTTOM,
       backgroundColor: AppColors.success,
-      colorText: AppColors.white,
+      textColor: AppColors.white,
     );
   }
 

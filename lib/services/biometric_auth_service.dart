@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:new_version/utils/app_snackbar.dart';
 
 class BiometricAuthService extends GetxService {
   final LocalAuthentication _auth = LocalAuthentication();
@@ -27,10 +28,10 @@ class BiometricAuthService extends GetxService {
   Future<bool> authenticate({String reason = 'يرجى تأكيد هويتك للمتابعة'}) async {
     final bool isAvailable = await isAuthenticationAvailable();
     if (!isAvailable) {
-      Get.snackbar(
-        'مطلوب قفل الشاشة',
+      AppSnackbar.warning(
         'لحمايتك، يرجى تفعيل قفل الشاشة (بصمة، وجه، رمز، أو نمط) في إعدادات جهازك قبل تغيير كلمة المرور.',
-        snackPosition: SnackPosition.BOTTOM,
+        title: 'مطلوب قفل الشاشة',
+        position: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 4),
       );
       return false;
@@ -45,32 +46,32 @@ class BiometricAuthService extends GetxService {
       return didAuthenticate;
     } on PlatformException catch (e) {
       if (e.code == 'NotEnrolled' || e.code == 'PasscodeNotSet') {
-        Get.snackbar(
-          'مطلوب قفل الشاشة',
+        AppSnackbar.warning(
           'لحمايتك، يرجى تفعيل قفل الشاشة (بصمة، وجه، رمز، أو نمط) في إعدادات جهازك قبل تغيير كلمة المرور.',
-          snackPosition: SnackPosition.BOTTOM,
+          title: 'مطلوب قفل الشاشة',
+          position: SnackPosition.BOTTOM,
           duration: const Duration(seconds: 4),
         );
       } else if (e.code == 'LockedOut' || e.code == 'PermanentlyLockedOut') {
-        Get.snackbar(
-          'خطأ في المصادقة',
+        AppSnackbar.error(
           'تم قفل المصادقة بسبب محاولات فاشلة كثيرة. يرجى المحاولة لاحقاً.',
-          snackPosition: SnackPosition.BOTTOM,
+          title: 'خطأ في المصادقة',
+          position: SnackPosition.BOTTOM,
         );
       } else {
-        Get.snackbar(
-          'خطأ',
+        AppSnackbar.error(
           'حدث خطأ أثناء المصادقة. يرجى المحاولة مرة أخرى.',
-          snackPosition: SnackPosition.BOTTOM,
+          title: 'خطأ',
+          position: SnackPosition.BOTTOM,
         );
       }
       return false;
     } catch (e) {
       print('exception on authenticate');
-      Get.snackbar(
-        'خطأ',
+      AppSnackbar.error(
         'حدث خطأ غير متوقع.',
-        snackPosition: SnackPosition.BOTTOM,
+        title: 'خطأ',
+        position: SnackPosition.BOTTOM,
       );
       return false;
     }

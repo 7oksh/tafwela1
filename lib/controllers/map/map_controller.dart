@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
+import 'package:new_version/utils/app_snackbar.dart';
 
 class MapController extends GetxController {
   final currentPosition = Rx<Position?>(null);
@@ -13,8 +14,11 @@ class MapController extends GetxController {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        Get.snackbar('تنبيه', 'فعّل الـ GPS من الإعدادات',
-            snackPosition: SnackPosition.BOTTOM);
+        AppSnackbar.warning(
+          'فعّل الـ GPS من الإعدادات',
+          title: 'تنبيه',
+          position: SnackPosition.BOTTOM,
+        );
         return;
       }
 
@@ -22,15 +26,21 @@ class MapController extends GetxController {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          Get.snackbar('تنبيه', 'محتاج إذن الموقع عشان التطبيق يشتغل',
-              snackPosition: SnackPosition.BOTTOM);
+          AppSnackbar.warning(
+            'محتاج إذن الموقع عشان التطبيق يشتغل',
+            title: 'تنبيه',
+            position: SnackPosition.BOTTOM,
+          );
           return;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        Get.snackbar('تنبيه', 'افتح الإعدادات وفعّل إذن الموقع',
-            snackPosition: SnackPosition.BOTTOM);
+        AppSnackbar.warning(
+          'افتح الإعدادات وفعّل إذن الموقع',
+          title: 'تنبيه',
+          position: SnackPosition.BOTTOM,
+        );
         await Geolocator.openAppSettings();
         return;
       }
@@ -42,11 +52,17 @@ class MapController extends GetxController {
       );
       currentPosition.value = position;
     } on PlatformException catch (e) {
-      Get.snackbar('خطأ', 'حدث خطأ في النظام: ${e.message}',
-          snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.error(
+        'حدث خطأ في النظام: ${e.message}',
+        title: 'خطأ',
+        position: SnackPosition.BOTTOM,
+      );
     } catch (e) {
-      Get.snackbar('خطأ', 'تعذر الحصول على الموقع',
-          snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.error(
+        'تعذر الحصول على الموقع',
+        title: 'خطأ',
+        position: SnackPosition.BOTTOM,
+      );
     }
   }
 }

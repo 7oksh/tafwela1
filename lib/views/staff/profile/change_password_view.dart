@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:new_version/services/biometric_auth_service.dart';
+import 'package:new_version/utils/app_snackbar.dart';
 
 class ChangePasswordView extends StatelessWidget {
   ChangePasswordView({super.key});
@@ -150,24 +151,24 @@ class ChangePasswordView extends StatelessWidget {
                   onPressed: () async {
                     // Validation
                     if (!isValidPassword(newPasswordController.text)) {
-                      Get.snackbar(
-                        "خطأ",
+                      AppSnackbar.error(
                         "كلمة المرور يجب أن تحتوي على 8 أحرف مع أرقام وحروف",
+                        title: "خطأ",
                         backgroundColor: Colors.red,
-                        colorText: Colors.white,
-                        snackPosition: SnackPosition.BOTTOM,
+                        textColor: Colors.white,
+                        position: SnackPosition.BOTTOM,
                       );
                       return;
                     }
 
                     // Match Validation
                     if (newPasswordController.text != confirmPasswordController.text) {
-                      Get.snackbar(
-                        "خطأ",
+                      AppSnackbar.error(
                         "كلمتا المرور غير متطابقتين",
+                        title: "خطأ",
                         backgroundColor: Colors.red,
-                        colorText: Colors.white,
-                        snackPosition: SnackPosition.BOTTOM,
+                        textColor: Colors.white,
+                        position: SnackPosition.BOTTOM,
                       );
                       return;
                     }
@@ -190,20 +191,20 @@ class ChangePasswordView extends StatelessWidget {
                       await user.updatePassword(newPasswordController.text);
 
                       Get.back();
-                      Get.snackbar(
-                        "تم التحديث",
+                      AppSnackbar.success(
                         "تم تغيير كلمة المرور بنجاح",
+                        title: "تم التحديث",
                         backgroundColor: Colors.green,
-                        colorText: Colors.white,
-                        snackPosition: SnackPosition.BOTTOM,
+                        textColor: Colors.white,
+                        position: SnackPosition.BOTTOM,
                       );
                     } on FirebaseAuthException catch (e) {
-                      Get.snackbar(
-                        'خطأ',
+                      AppSnackbar.error(
                         e.message ?? 'فشل تحديث كلمة المرور',
+                        title: 'خطأ',
                         backgroundColor: Colors.red,
-                        colorText: Colors.white,
-                        snackPosition: SnackPosition.BOTTOM,
+                        textColor: Colors.white,
+                        position: SnackPosition.BOTTOM,
                       );
                     }
                   },

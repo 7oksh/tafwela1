@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:new_version/controllers/auth/auth_controller.dart';
+import 'package:new_version/utils/app_snackbar.dart';
 import '../../models/user_role.dart';
 
 class EmployeeRegisterView extends StatelessWidget {
@@ -26,13 +27,19 @@ class EmployeeRegisterView extends StatelessWidget {
         _stationController.text.isEmpty ||
         _phoneController.text.isEmpty ||
         _passwordController.text.isEmpty) {
-      Get.snackbar('تنبيه', 'من فضلك املأ كل الحقول',
-          snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.warning(
+        'من فضلك املأ كل الحقول',
+        title: 'تنبيه',
+        position: SnackPosition.BOTTOM,
+      );
       return;
     }
     if (_passwordController.text != _confirmPasswordController.text) {
-      Get.snackbar('تنبيه', 'كلمة المرور مش متطابقة',
-          snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.warning(
+        'كلمة المرور مش متطابقة',
+        title: 'تنبيه',
+        position: SnackPosition.BOTTOM,
+      );
       return;
     }
     authController.registerStaff(

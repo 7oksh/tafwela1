@@ -1,13 +1,13 @@
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:get/get.dart';
+import 'package:new_version/utils/app_snackbar.dart';
 
 class LocationService {
   Future<Position?> getCurrentPosition() async {
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        Get.snackbar('تنبيه', 'الرجاء تفعيل خدمة الموقع (GPS)');
+        AppSnackbar.warning('الرجاء تفعيل خدمة الموقع (GPS)', title: 'تنبيه');
         return null;
       }
 
@@ -15,13 +15,13 @@ class LocationService {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          Get.snackbar('تنبيه', 'تم رفض إذن الوصول للموقع');
+          AppSnackbar.warning('تم رفض إذن الوصول للموقع', title: 'تنبيه');
           return null;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
-        Get.snackbar('تنبيه', 'إذن الموقع مرفوض نهائياً، يرجى تفعيله من الإعدادات');
+        AppSnackbar.warning('إذن الموقع مرفوض نهائياً، يرجى تفعيله من الإعدادات', title: 'تنبيه');
         return null;
       }
 
@@ -32,10 +32,10 @@ class LocationService {
         ),
       );
     } on PlatformException catch (e) {
-      Get.snackbar('خطأ في الموقع', 'حدث خطأ في النظام: ${e.message}');
+      AppSnackbar.error('حدث خطأ في النظام: ${e.message}', title: 'خطأ في الموقع');
       return null;
     } catch (e) {
-      Get.snackbar('خطأ', 'تعذر الحصول على الموقع الحالي');
+      AppSnackbar.error('تعذر الحصول على الموقع الحالي', title: 'خطأ');
       return null;
     }
   }

@@ -4,6 +4,8 @@ import 'package:new_version/models/station_model.dart';
 import 'package:new_version/services/database_service.dart';
 import 'package:new_version/services/osrm_service.dart';
 import 'package:new_version/services/overpass_service.dart';
+import 'package:new_version/utils/exceptions.dart';
+import 'package:new_version/utils/app_snackbar.dart';
 
 class StationController extends GetxController {
   StationController({DatabaseService? databaseService})
@@ -107,7 +109,7 @@ class StationController extends GetxController {
           await _overpassService.fetchNearbyStations(userLat, userLng);
 
       if (nearby.isEmpty) {
-        Get.snackbar('تنبيه', 'لم يتم العثور على محطات وقود قريبة');
+        AppSnackbar.warning('لم يتم العثور على محطات وقود قريبة', title: 'تنبيه');
         return;
       }
 
@@ -145,8 +147,10 @@ class StationController extends GetxController {
       if (routed.isNotEmpty) {
         selectedStation.value = routed.first;
       }
-    } catch (e) {
-      Get.snackbar('خطأ', 'تعذر البحث عن المحطات القريبة');
+    } on ApiException catch (e) {
+      AppSnackbar.error(e.message);
+    } catch (_) {
+      AppSnackbar.error('حدث خطأ غير متوقع');
     } finally {
       isFindingFastest.value = false;
     }

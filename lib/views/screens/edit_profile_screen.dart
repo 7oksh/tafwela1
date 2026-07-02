@@ -8,6 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:new_version/controllers/driver_profile_controller.dart';
 import 'package:new_version/utils/constants.dart';
 import 'package:new_version/views/widgets/custom_button.dart';
+import 'package:new_version/utils/app_snackbar.dart';
 
 /// Resolves stored photo value (base64 data URI or plain URL) to [ImageProvider].
 ImageProvider? _resolvePhoto(String? value) {
@@ -160,8 +161,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _save() async {
     if (_firstNameCtrl.text.trim().isEmpty ||
         _lastNameCtrl.text.trim().isEmpty) {
-      Get.snackbar('تنبيه', 'من فضلك املأ الاسم',
-          snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.warning(
+        'من فضلك املأ الاسم',
+        title: 'تنبيه',
+        position: SnackPosition.BOTTOM,
+      );
       return;
     }
 
@@ -184,16 +188,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       );
 
       Get.back();
-      Get.snackbar(
-        'تم الحفظ',
+      AppSnackbar.success(
         'تم تحديث بياناتك بنجاح',
+        title: 'تم الحفظ',
         backgroundColor: Colors.green,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
+        textColor: Colors.white,
+        position: SnackPosition.BOTTOM,
       );
     } catch (_) {
-      Get.snackbar('خطأ', 'فشل الحفظ، تحقق من اتصالك وأعد المحاولة',
-          snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.error(
+        'فشل الحفظ، تحقق من اتصالك وأعد المحاولة',
+        title: 'خطأ',
+        position: SnackPosition.BOTTOM,
+      );
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }

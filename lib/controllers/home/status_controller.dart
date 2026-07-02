@@ -8,6 +8,7 @@ import 'package:new_version/controllers/staff/history_controller.dart';
 import 'package:new_version/controllers/staff/reports_controller.dart';
 import 'package:new_version/services/local_database_service.dart';
 import 'package:new_version/database/entities/staff_history_entity.dart';
+import 'package:new_version/utils/app_snackbar.dart';
 
 class StatusController extends GetxController {
   var selectedStatus = "".obs;
@@ -65,12 +66,12 @@ class StatusController extends GetxController {
     final stationName = staffCtrl.stationName.value.trim();
     
     if (stationName.isEmpty) {
-      Get.snackbar('خطأ', 'اسم المحطة غير متوفر. يرجى مراجعة بيانات الحساب.');
+      AppSnackbar.error('اسم المحطة غير متوفر. يرجى مراجعة بيانات الحساب.', title: 'خطأ');
       return;
     }
     
     if (selectedStatus.value.isEmpty) {
-      Get.snackbar('خطأ', 'يرجى اختيار حالة أولاً');
+      AppSnackbar.error('يرجى اختيار حالة أولاً', title: 'خطأ');
       return;
     }
 
@@ -83,7 +84,7 @@ class StatusController extends GetxController {
          await dbService.init();
          Get.put(dbService, permanent: true);
        } catch (e) {
-         Get.snackbar('خطأ', 'فشل في تهيئة قاعدة البيانات المحلية');
+         AppSnackbar.error('فشل في تهيئة قاعدة البيانات المحلية', title: 'خطأ');
          return;
        }
     }
@@ -98,7 +99,7 @@ class StatusController extends GetxController {
       if (!docSnapshot.exists) {
         if (Get.isDialogOpen ?? false) Get.back();
         print("Station document not found: '$stationName'");
-        Get.snackbar('خطأ', 'لم يتم العثور على وثيقة المحطة باسم "$stationName" في قاعدة البيانات.');
+        AppSnackbar.error('لم يتم العثور على وثيقة المحطة باسم "$stationName" في قاعدة البيانات.', title: 'خطأ');
         return;
       }
 
@@ -138,14 +139,14 @@ class StatusController extends GetxController {
       }
 
       if (Get.isDialogOpen ?? false) Get.back(); // close dialog
-      Get.snackbar('نجاح', 'تم تحديث حالة المحطة بنجاح');
+      AppSnackbar.success('تم تحديث حالة المحطة بنجاح', title: 'نجاح');
       
       timerCtrl.resetTimer();
       selectedStatus.value = ''; // Reset selection
     } catch (e) {
       if (Get.isDialogOpen ?? false) Get.back(); // close dialog
       print("Update error: $e");
-      Get.snackbar('خطأ', 'فشل في تحديث الحالة: $e');
+      AppSnackbar.error('فشل في تحديث الحالة: $e', title: 'خطأ');
     }
   }
 }

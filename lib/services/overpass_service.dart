@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:new_version/models/station_model.dart';
+import 'package:new_version/utils/exceptions.dart';
 
 /// Fetches nearby fuel stations from OpenStreetMap using Overpass API.
 class OverpassService {
@@ -73,6 +74,9 @@ out center;
           isOpen: true,
         );
       }).toList();
+    } on DioException catch (e) {
+      debugPrint('Overpass DioException: $e');
+      throw ApiException(DioExceptionHandler.handle(e));
     } catch (e, stackTrace) {
       debugPrint('Overpass Exception: $e');
       debugPrint(stackTrace.toString());

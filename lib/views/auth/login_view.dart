@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:new_version/controllers/auth/auth_controller.dart';
+import 'package:new_version/utils/app_snackbar.dart';
 import 'package:new_version/views/auth/customer_register_view.dart';
 import 'package:new_version/views/auth/employee_register_view.dart';
 
@@ -19,9 +20,7 @@ class LoginView extends StatelessWidget {
 
   void _submit() {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      if (!Get.isSnackbarOpen) {
-        Get.snackbar('تنبيه', 'من فضلك ادخل الإيميل وكلمة المرور');
-      }
+      AppSnackbar.warning('من فضلك ادخل الإيميل وكلمة المرور', title: 'تنبيه');
       return;
     }
 

@@ -13,6 +13,7 @@ import 'package:new_version/views/screens/change_password_screen.dart';
 import 'package:new_version/views/screens/edit_profile_screen.dart';
 import 'package:new_version/views/screens/favorites_screen.dart';
 import 'package:new_version/views/widgets/profile_menu_tile.dart';
+import 'package:new_version/utils/app_snackbar.dart';
 
 DecorationImage? _resolveDecorationImage(String? value) {
   if (value == null || value.isEmpty) return null;
@@ -247,7 +248,7 @@ class _MenuSection extends StatelessWidget {
             icon: Icons.tune,
             title: 'تفضيلات البحث',
             subtitle: 'نوع الوقود والماركة المفضلة',
-            onTap: () => Get.snackbar('قريباً', 'هذه الميزة قيد التطوير'),
+            onTap: () => AppSnackbar.warning('هذه الميزة قيد التطوير', title: 'قريباً'),
           ),
           _divider(),
           ProfileMenuTile(
@@ -274,7 +275,7 @@ class _MenuSection extends StatelessWidget {
             icon: Icons.headset_mic_outlined,
             title: 'الدعم الفني',
             subtitle: 'تواصل معنا للمساعدة',
-            onTap: () => Get.snackbar('الدعم', 'support@tafwela.com'),
+            onTap: () => AppSnackbar.warning('support@tafwela.com', title: 'الدعم'),
           ),
           _divider(),
           ProfileMenuTile(

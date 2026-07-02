@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:new_version/utils/app_snackbar.dart';
 import 'package:new_version/controllers/staff_controller.dart';
 
 /// Returns the correct [ImageProvider] for a stored photo value.
@@ -150,8 +151,11 @@ class _EditProfileViewState extends State<EditProfileView> {
     final phone = _phoneCtrl.text.trim();
 
     if (firstName.isEmpty || lastName.isEmpty) {
-      Get.snackbar('تنبيه', 'الاسم مطلوب',
-          snackPosition: SnackPosition.BOTTOM);
+      AppSnackbar.warning(
+        'الاسم مطلوب',
+        title: 'تنبيه',
+        position: SnackPosition.BOTTOM,
+      );
       return;
     }
 
@@ -188,20 +192,20 @@ class _EditProfileViewState extends State<EditProfileView> {
       );
 
       Get.back();
-      Get.snackbar(
-        'تم الحفظ',
+      AppSnackbar.success(
         'تم تحديث بياناتك بنجاح',
+        title: 'تم الحفظ',
         backgroundColor: Colors.green,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
+        textColor: Colors.white,
+        position: SnackPosition.BOTTOM,
       );
     } catch (e) {
-      Get.snackbar(
-        'خطأ في الحفظ',
+      AppSnackbar.error(
         'فشل الحفظ، تحقق من اتصالك وأعد المحاولة',
+        title: 'خطأ في الحفظ',
         backgroundColor: Colors.red,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
+        textColor: Colors.white,
+        position: SnackPosition.BOTTOM,
         duration: const Duration(seconds: 4),
       );
     } finally {

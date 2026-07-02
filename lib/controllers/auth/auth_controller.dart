@@ -10,7 +10,9 @@ import 'package:new_version/views/auth/pending_view.dart';
 import 'package:new_version/views/auth/blocked_employee_view.dart';
 import 'package:new_version/views/admin/admin_main_view.dart';
 import 'package:new_version/utils/routes.dart';
+import 'package:new_version/utils/exceptions.dart';
 import '../../services/connectivity_service.dart';
+import 'package:new_version/utils/app_snackbar.dart';
 
 class AuthController extends GetxController {
   final _auth = FirebaseAuth.instance;
@@ -24,7 +26,7 @@ class AuthController extends GetxController {
 
   bool checkInternet() {
     if (!connectivity.isConnected.value) {
-      Get.snackbar('لا يوجد اتصال', 'تأكد من اتصالك بالإنترنت');
+      AppSnackbar.warning('تأكد من اتصالك بالإنترنت', title: 'لا يوجد اتصال');
       return false;
     }
     return true;
@@ -68,7 +70,7 @@ class AuthController extends GetxController {
     } on FirebaseAuthException catch (e) {
       _handleAuthError(e);
     } catch (_) {
-      Get.snackbar('تنبيه', 'فشل تسجيل الدخول بجوجل');
+      AppSnackbar.warning('فشل تسجيل الدخول بجوجل', title: 'تنبيه');
     } finally {
       isLoading.value = false;
     }
@@ -81,9 +83,9 @@ class AuthController extends GetxController {
       final result = await FacebookAuth.instance.login();
       if (result.status == LoginStatus.cancelled) return;
       if (result.status != LoginStatus.success || result.accessToken == null) {
-        Get.snackbar(
-          'تنبيه',
+        AppSnackbar.warning(
           result.message ?? 'فشل تسجيل الدخول بفيسبوك',
+          title: 'تنبيه',
         );
         return;
       }
@@ -96,7 +98,7 @@ class AuthController extends GetxController {
     } on FirebaseAuthException catch (e) {
       _handleAuthError(e);
     } catch (_) {
-      Get.snackbar('تنبيه', 'فشل تسجيل الدخول بفيسبوك');
+      AppSnackbar.warning('فشل تسجيل الدخول بفيسبوك', title: 'تنبيه');
     } finally {
       isLoading.value = false;
     }
@@ -143,21 +145,21 @@ class AuthController extends GetxController {
           Get.offAll(() => const PendingView());
         }
       } else {
-        Get.snackbar('خطأ', 'حسابك مش مسجل كموظف');
+        AppSnackbar.error('حسابك مش مسجل كموظف', title: 'خطأ');
       }
     } else if (userType == UserRole.admin) {
       final adminDoc = await _firestore.collection('admins').doc(uid).get();
       if (adminDoc.exists) {
         Get.offAll(() => const AdminMainView());
       } else {
-        Get.snackbar('تنبيه', 'هذا الحساب ليس مسؤولاً');
+        AppSnackbar.warning('هذا الحساب ليس مسؤولاً', title: 'تنبيه');
       }
     } else {
       final userDoc = await _firestore.collection('users').doc(uid).get();
       if (userDoc.exists) {
         Get.offAllNamed(AppRoutes.driverMain);
       } else {
-        Get.snackbar('خطأ', 'حسابك مش مسجل كسائق');
+        AppSnackbar.error('حسابك مش مسجل كسائق', title: 'خطأ');
       }
     }
   }
@@ -244,16 +246,11 @@ class AuthController extends GetxController {
   }
 
   void _handleAuthError(FirebaseAuthException e) {
-    final message = switch (e.code) {
-      'weak-password' => 'كلمة المرور ضعيفة',
-      'email-already-in-use' => 'الإيميل مسجل مسبقاً',
-      'user-not-found' => 'الحساب غير موجود',
-      'wrong-password' => 'كلمة المرور خطأ',
-      'invalid-credential' => 'بيانات الدخول غير صحيحة',
-      'account-exists-with-different-credential' =>
-        'هذا الإيميل مسجل بطريقة تسجيل أخرى',
-      _ => 'خطأ: ${e.message}',
-    };
-    Get.snackbar('تنبيه', message, snackPosition: SnackPosition.BOTTOM);
+    final message = FirebaseExceptionHandler.handle(e);
+    AppSnackbar.warning(
+      message,
+      title: 'تنبيه',
+      position: SnackPosition.BOTTOM,
+    );
   }
 }
