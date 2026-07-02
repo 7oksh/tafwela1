@@ -175,8 +175,7 @@ class _StaffHomeViewState extends State<StaffHomeView> {
                           borderRadius: BorderRadius.circular(30),
                           onTap: isEnabled
                               ? () {
-                            _timerCtrl.resetTimer();
-                            // update status in Firestore
+                            _statusCtrl.updateStationStatus();
                           }
                               : null,
                           child: Center(

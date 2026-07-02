@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:new_version/controllers/home/nav_controller.dart';
 import 'package:new_version/controllers/home/status_controller.dart';
-import 'package:new_version/views/staff/home/crowd_times_view.dart';
+
 import 'package:new_version/views/staff/home/staff_home_view.dart';
 import 'package:new_version/views/staff/profile/profile_view.dart';
+import 'package:new_version/views/staff/history/history_view.dart';
+import 'package:new_version/views/staff/reports/reports_view.dart';
 import 'package:new_version/widgets/common/custom_bottom_nav.dart';
 import 'package:showcaseview/showcaseview.dart';
-import 'reports/staff_reports_view.dart';
 
 class MainView extends StatefulWidget {
   const MainView({super.key});
@@ -31,11 +32,9 @@ class _MainViewState extends State<MainView> {
   Widget build(BuildContext context) {
     return ShowCaseWidget(
       onFinish: () {
-        // اختياري — لو عايز تحفظ إن الـ tour خلص
         // _statusCtrl.markShowcaseDone();
       },
       builder: (context) {
-        // ── ابدأ الـ Showcase بعد الـ build مباشرة ──
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!_statusCtrl.showcaseDone.value) {
             ShowCaseWidget.of(context).startShowCase([
@@ -52,9 +51,9 @@ class _MainViewState extends State<MainView> {
               case 0:
                 return StaffHomeView();
               case 1:
-                return StaffReportsView();
+                return HistoryView();
               case 2:
-                return CrowdTimesView();
+                return ReportsView();
               case 3:
                 return const ProfileView();
               default:

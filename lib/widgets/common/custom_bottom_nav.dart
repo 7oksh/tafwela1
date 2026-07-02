@@ -22,8 +22,8 @@ class CustomBottomNav extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           item(Icons.home, "الرئيسية", 0),
-          item(Icons.history, "السجل", 2),
-          item(Icons.bar_chart, "التقارير", 1),
+          item(Icons.history, "السجل", 1),
+          item(Icons.bar_chart, "التقارير", 2),
           item(Icons.person, "الملف", 3),
         ],
       ),

@@ -2,11 +2,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:new_version/models/crowd_update_model.dart';
-import 'package:new_version/models/station_model.dart';
+import 'package:new_version/services/local_database_service.dart';
 
 class StaffController extends GetxController {
   final updates = <CrowdUpdateModel>[].obs;
   final isLoading = false.obs;
+  final isInitialized = false.obs;
 
   // Profile fields – populated from Firestore after login
   final staffName = ''.obs;
@@ -20,8 +21,26 @@ class StaffController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    loadProfile();
-    _loadMockUpdates();
+    _initAll();
+  }
+
+  Future<void> _initAll() async {
+    try {
+      isLoading.value = true;
+      await _initLocalDb();
+      await loadProfile();
+    } finally {
+      isInitialized.value = true;
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> _initLocalDb() async {
+    if (!Get.isRegistered<LocalDatabaseService>()) {
+      final dbService = LocalDatabaseService();
+      await dbService.init();
+      Get.put(dbService, permanent: true);
+    }
   }
 
   Future<void> loadProfile() async {
@@ -36,7 +55,7 @@ class StaffController extends GetxController {
         final d = doc.data()!;
         staffName.value =
             '${d['firstName'] ?? ''} ${d['lastName'] ?? ''}'.trim();
-        stationName.value = d['stationName'] as String? ?? '';
+        stationName.value = (d['stationName'] as String? ?? '').trim();
         staffUid.value = uid;
         staffCode.value = d['staffCode'] as String? ??
             'STF-${uid.substring(0, 6).toUpperCase()}';
@@ -44,8 +63,8 @@ class StaffController extends GetxController {
         staffPhone.value = d['phone'] as String? ?? '';
         photoUrl.value = d['photoUrl'] as String? ?? '';
       }
-    } catch (_) {
-      // keep empty values; UI will show placeholders
+    } catch (e) {
+      print("Error loading staff profile: $e");
     }
   }
 
@@ -57,83 +76,12 @@ class StaffController extends GetxController {
     String? newPhotoUrl,
   }) {
     if (firstName != null || lastName != null) {
-      final fn = firstName ?? staffName.value.split(' ').first;
-      final ln = lastName ?? staffName.value.split(' ').skip(1).join(' ');
+      final fn = firstName ?? (staffName.value.isNotEmpty ? staffName.value.split(' ').first : '');
+      final ln = lastName ?? (staffName.value.split(' ').length > 1 ? staffName.value.split(' ').skip(1).join(' ') : '');
       staffName.value = '$fn $ln'.trim();
     }
     if (phone != null) staffPhone.value = phone;
     if (newPhotoUrl != null) photoUrl.value = newPhotoUrl;
-  }
-
-  void _loadMockUpdates() {
-    updates.assignAll([
-      CrowdUpdateModel(
-        id: '1',
-        stationId: 's1',
-        stationName: 'محطة النور',
-        stationAddress: 'شارع الملك فهد - جدة',
-        stationImageUrl: '',
-        oldStatus: CrowdStatus.low,
-        newStatus: CrowdStatus.high,
-        updatedAt: DateTime.now().subtract(const Duration(minutes: 15)),
-        updatedByName: 'أحمد محمد',
-      ),
-      CrowdUpdateModel(
-        id: '2',
-        stationId: 's2',
-        stationName: 'محطة الأمل',
-        stationAddress: 'حي النزهة - الرياض',
-        stationImageUrl: '',
-        oldStatus: CrowdStatus.high,
-        newStatus: CrowdStatus.medium,
-        updatedAt: DateTime.now().subtract(const Duration(hours: 1)),
-        updatedByName: 'سارة علي',
-      ),
-      CrowdUpdateModel(
-        id: '3',
-        stationId: 's3',
-        stationName: 'محطة الفجر',
-        stationAddress: 'طريق الملك عبدالله - مكة',
-        stationImageUrl: '',
-        oldStatus: CrowdStatus.medium,
-        newStatus: CrowdStatus.low,
-        updatedAt: DateTime.now().subtract(const Duration(hours: 2)),
-        updatedByName: 'محمد خالد',
-      ),
-      CrowdUpdateModel(
-        id: '4',
-        stationId: 's4',
-        stationName: 'محطة الربوة',
-        stationAddress: 'شارع التحلية - جدة',
-        stationImageUrl: '',
-        oldStatus: CrowdStatus.none,
-        newStatus: CrowdStatus.high,
-        updatedAt: DateTime.now().subtract(const Duration(hours: 3)),
-        updatedByName: 'أحمد محمد',
-      ),
-      CrowdUpdateModel(
-        id: '5',
-        stationId: 's1',
-        stationName: 'محطة النور',
-        stationAddress: 'شارع الملك فهد - جدة',
-        stationImageUrl: '',
-        oldStatus: CrowdStatus.medium,
-        newStatus: CrowdStatus.low,
-        updatedAt: DateTime.now().subtract(const Duration(hours: 5)),
-        updatedByName: 'أحمد محمد',
-      ),
-      CrowdUpdateModel(
-        id: '6',
-        stationId: 's5',
-        stationName: 'محطة الوفاء',
-        stationAddress: 'حي الروضة - الدمام',
-        stationImageUrl: '',
-        oldStatus: CrowdStatus.low,
-        newStatus: CrowdStatus.none,
-        updatedAt: DateTime.now().subtract(const Duration(days: 1)),
-        updatedByName: 'ليلى أحمد',
-      ),
-    ]);
   }
 
   void addUpdate(CrowdUpdateModel update) {

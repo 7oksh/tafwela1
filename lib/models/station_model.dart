@@ -37,6 +37,9 @@ class StationModel {
   });
 
   factory StationModel.fromMap(Map<String, dynamic> map) {
+    // Read from 'status' (Firebase) or 'crowdStatus' (Old/Code)
+    final statusValue = map['status'] ?? map['crowdStatus'];
+    
     return StationModel(
       id: map['id'] as String? ?? '',
       name: map['name'] as String? ?? '',
@@ -45,7 +48,7 @@ class StationModel {
       longitude: (map['longitude'] as num?)?.toDouble() ?? 0,
       distanceKm: (map['distanceKm'] as num?)?.toDouble() ?? 0,
       rating: (map['rating'] as num?)?.toDouble() ?? 0,
-      crowdStatus: _parseCrowdStatus(map['crowdStatus']),
+      crowdStatus: _parseCrowdStatus(statusValue),
       imageUrl: map['imageUrl'] as String? ?? '',
       fuelTypes: (map['fuelTypes'] as List<dynamic>?)
               ?.map((e) => FuelTypeModel.fromMap(e as Map<String, dynamic>))
@@ -88,7 +91,7 @@ class StationModel {
         'longitude': longitude,
         'distanceKm': distanceKm,
         'rating': rating,
-        'crowdStatus': crowdStatus.name,
+        'status': crowdStatus.name, // Saved as 'status' for Firebase compatibility
         'imageUrl': imageUrl,
         'fuelTypes': fuelTypes.map((e) => e.toMap()).toList(),
         'services': services,

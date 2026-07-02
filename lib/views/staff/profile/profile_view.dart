@@ -31,10 +31,14 @@ class ProfileView extends StatelessWidget {
       ),
       backgroundColor: const Color(0xFFF5F6FA),
       body: SingleChildScrollView(
+
         child: Column(
           children: [
             const ProfileHeader(),
-            const SizedBox(height: 100),
+            
+            // Increased spacing to account for the overlapping white card in ProfileHeader
+            const SizedBox(height: 140),
+            
             Obx(() => Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
@@ -48,7 +52,7 @@ class ProfileView extends StatelessWidget {
                           icon: Icons.local_gas_station,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: InfoCard(
                           title: 'رقم الموظف',
@@ -61,11 +65,17 @@ class ProfileView extends StatelessWidget {
                     ],
                   ),
                 )),
-            const SizedBox(height: 20),
+            
+            const SizedBox(height: 24),
+            
+            // SettingsSection already has its own internal vertical margins
             SettingsSection(),
-            const SizedBox(height: 20),
+            
+            const SizedBox(height: 10),
+            
             LogoutButton(),
-            const SizedBox(height: 30),
+            
+            const SizedBox(height: 60),
           ],
         ),
       ),

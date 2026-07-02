@@ -59,6 +59,10 @@ dependencies:
   latlong2: ^0.9.1
   http: ^1.4.0
   showcaseview: ^5.1.0
+  floor: ^1.5.0
+  sqlite3_flutter_libs: ^0.6.0+eol
+  fl_chart: ^1.2.0
+
 
 dev_dependencies:
   flutter_test:
@@ -70,6 +74,8 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  floor_generator: ^1.5.0
+  build_runner: ^2.4.13
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -5,9 +5,7 @@ import 'package:new_version/views/splash/splash_view.dart';
 import 'package:new_version/views/screens/driver_main_screen.dart';
 import 'package:new_version/views/screens/driver_preferences_screen.dart';
 import 'package:new_version/views/staff/main_view.dart';
-import 'package:new_version/views/staff/home/crowd_times_view.dart';
-import 'package:new_version/views/staff/home/crowd_updates_log_view.dart';
-import 'package:new_version/views/staff/reports/staff_reports_view.dart';
+
 
 // Splash Controllers
 import 'package:new_version/controllers/settings/onboarding_controller.dart';
@@ -84,17 +82,6 @@ abstract final class AppRoutes {
         Get.lazyPut(() => TimerController());
       }),
     ),
-    GetPage(
-      name: staffReports,
-      page: () => const StaffReportsView(),
-    ),
-    GetPage(
-      name: crowdUpdatesLog,
-      page: () => const CrowdUpdatesLogView(),
-    ),
-    GetPage(
-      name: crowdTimes,
-      page: () => CrowdTimesView(),
-    ),
+
   ];
 }

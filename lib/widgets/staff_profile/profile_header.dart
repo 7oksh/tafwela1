@@ -27,25 +27,33 @@ class ProfileHeader extends StatelessWidget {
       clipBehavior: Clip.none,
       alignment: Alignment.topCenter,
       children: [
+        // Blue background
         Container(
-          height: 120,
+          height: 140, // Increased height
           width: double.infinity,
-          color: const Color(0xFF1E3A5F),
+          decoration: const BoxDecoration(
+            color: Color(0xFF1E3A5F),
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(30),
+              bottomRight: Radius.circular(30),
+            ),
+          ),
         ),
 
+        // Info Card
         Positioned(
-          top: 60,
+          top: 80, // Lowered
           child: Container(
             width: MediaQuery.of(context).size.width * 0.9,
-            padding: const EdgeInsets.only(top: 70, bottom: 20),
+            padding: const EdgeInsets.only(top: 85, bottom: 25), // Increased padding
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(25),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
+                  color: Colors.black.withOpacity(0.08),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
                 ),
               ],
             ),
@@ -56,17 +64,18 @@ class ProfileHeader extends StatelessWidget {
                           ? staffCtrl.staffName.value
                           : 'جاري التحميل...',
                       style: GoogleFonts.cairo(
-                        fontSize: 20,
+                        fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFF1E293B),
                       ),
                     )),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   'موظف محطة',
                   style: GoogleFonts.cairo(
-                    color: Colors.grey,
-                    fontSize: 14,
+                    color: Colors.grey.shade500,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
@@ -74,13 +83,11 @@ class ProfileHeader extends StatelessWidget {
           ),
         ),
 
-
+        // Profile Picture
         Positioned(
-          top: 20,
+          top: 30, // Lowered
           child: Stack(
             children: [
-
-
               GestureDetector(
                 onTap: () => Get.to(() => const EditProfileView()),
                 child: Container(
@@ -88,42 +95,40 @@ class ProfileHeader extends StatelessWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
+                        color: Colors.black.withOpacity(0.15),
+                        blurRadius: 15,
+                        offset: const Offset(0, 8),
                       ),
                     ],
                   ),
                   child: Obx(() {
                     final url = staffCtrl.photoUrl.value;
                     return CircleAvatar(
-                      radius: 55,
+                      radius: 58,
                       backgroundColor: Colors.white,
                       child: CircleAvatar(
-                        radius: 50,
+                        radius: 54,
                         backgroundImage: _resolvePhoto(url),
                       ),
                     );
                   }),
                 ),
               ),
-
-
               Positioned(
                 bottom: 5,
                 right: 5,
                 child: GestureDetector(
                   onTap: () => Get.to(() => const EditProfileView()),
                   child: Container(
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(8), // More space
                     decoration: BoxDecoration(
-                      color: Colors.teal,
+                      color: const Color(0xFF0EA5A8),
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
+                      border: Border.all(color: Colors.white, width: 3),
                     ),
                     child: const Icon(
-                      Icons.edit,
-                      size: 16,
+                      Icons.camera_alt,
+                      size: 18,
                       color: Colors.white,
                     ),
                   ),
