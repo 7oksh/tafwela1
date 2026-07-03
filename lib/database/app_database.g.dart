@@ -74,13 +74,17 @@ class _$AppDatabase extends AppDatabase {
 
   StaffHistoryDao? _staffHistoryDaoInstance;
 
+  StationDao? _stationDaoInstance;
+
+  PendingWriteDao? _pendingWriteDaoInstance;
+
   Future<sqflite.Database> open(
     String path,
     List<Migration> migrations, [
     Callback? callback,
   ]) async {
     final databaseOptions = sqflite.OpenDatabaseOptions(
-      version: 1,
+      version: 3,
       onConfigure: (database) async {
         await database.execute('PRAGMA foreign_keys = ON');
         await callback?.onConfigure?.call(database);
@@ -97,6 +101,10 @@ class _$AppDatabase extends AppDatabase {
       onCreate: (database, version) async {
         await database.execute(
             'CREATE TABLE IF NOT EXISTS `staff_history` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `stationName` TEXT NOT NULL, `staffId` TEXT NOT NULL, `staffName` TEXT NOT NULL, `oldStatus` TEXT NOT NULL, `newStatus` TEXT NOT NULL, `updateTime` TEXT NOT NULL, `updateDate` TEXT NOT NULL, `responseDurationSeconds` INTEGER NOT NULL)');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `stations` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, `address` TEXT NOT NULL, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `rating` REAL NOT NULL, `crowdStatus` TEXT NOT NULL, `imageUrl` TEXT NOT NULL, `isOpen` INTEGER NOT NULL, `fuelTypesJson` TEXT NOT NULL, `servicesJson` TEXT NOT NULL, `cachedAt` TEXT NOT NULL, PRIMARY KEY (`id`))');
+        await database.execute(
+            'CREATE TABLE IF NOT EXISTS `pending_writes` (`id` INTEGER PRIMARY KEY AUTOINCREMENT, `collection` TEXT NOT NULL, `docId` TEXT NOT NULL, `operation` TEXT NOT NULL, `dataJson` TEXT NOT NULL, `createdAt` TEXT NOT NULL)');
 
         await callback?.onCreate?.call(database, version);
       },
@@ -108,6 +116,17 @@ class _$AppDatabase extends AppDatabase {
   StaffHistoryDao get staffHistoryDao {
     return _staffHistoryDaoInstance ??=
         _$StaffHistoryDao(database, changeListener);
+  }
+
+  @override
+  StationDao get stationDao {
+    return _stationDaoInstance ??= _$StationDao(database, changeListener);
+  }
+
+  @override
+  PendingWriteDao get pendingWriteDao {
+    return _pendingWriteDaoInstance ??=
+        _$PendingWriteDao(database, changeListener);
   }
 }
 
@@ -218,5 +237,119 @@ class _$StaffHistoryDao extends StaffHistoryDao {
   Future<void> insertHistory(StaffHistoryEntity history) async {
     await _staffHistoryEntityInsertionAdapter.insert(
         history, OnConflictStrategy.abort);
+  }
+}
+
+class _$StationDao extends StationDao {
+  _$StationDao(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database),
+        _stationEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'stations',
+            (StationEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'name': item.name,
+                  'address': item.address,
+                  'latitude': item.latitude,
+                  'longitude': item.longitude,
+                  'rating': item.rating,
+                  'crowdStatus': item.crowdStatus,
+                  'imageUrl': item.imageUrl,
+                  'isOpen': item.isOpen ? 1 : 0,
+                  'fuelTypesJson': item.fuelTypesJson,
+                  'servicesJson': item.servicesJson,
+                  'cachedAt': item.cachedAt
+                });
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<StationEntity> _stationEntityInsertionAdapter;
+
+  @override
+  Future<List<StationEntity>> getAllStations() async {
+    return _queryAdapter.queryList('SELECT * FROM stations',
+        mapper: (Map<String, Object?> row) => StationEntity(
+            id: row['id'] as String,
+            name: row['name'] as String,
+            address: row['address'] as String,
+            latitude: row['latitude'] as double,
+            longitude: row['longitude'] as double,
+            rating: row['rating'] as double,
+            crowdStatus: row['crowdStatus'] as String,
+            imageUrl: row['imageUrl'] as String,
+            isOpen: (row['isOpen'] as int) != 0,
+            fuelTypesJson: row['fuelTypesJson'] as String,
+            servicesJson: row['servicesJson'] as String,
+            cachedAt: row['cachedAt'] as String));
+  }
+
+  @override
+  Future<void> clearStations() async {
+    await _queryAdapter.queryNoReturn('DELETE FROM stations');
+  }
+
+  @override
+  Future<void> insertOrUpdateStations(List<StationEntity> stations) async {
+    await _stationEntityInsertionAdapter.insertList(
+        stations, OnConflictStrategy.replace);
+  }
+}
+
+class _$PendingWriteDao extends PendingWriteDao {
+  _$PendingWriteDao(
+    this.database,
+    this.changeListener,
+  )   : _queryAdapter = QueryAdapter(database),
+        _pendingWriteEntityInsertionAdapter = InsertionAdapter(
+            database,
+            'pending_writes',
+            (PendingWriteEntity item) => <String, Object?>{
+                  'id': item.id,
+                  'collection': item.collection,
+                  'docId': item.docId,
+                  'operation': item.operation,
+                  'dataJson': item.dataJson,
+                  'createdAt': item.createdAt
+                });
+
+  final sqflite.DatabaseExecutor database;
+
+  final StreamController<String> changeListener;
+
+  final QueryAdapter _queryAdapter;
+
+  final InsertionAdapter<PendingWriteEntity>
+      _pendingWriteEntityInsertionAdapter;
+
+  @override
+  Future<List<PendingWriteEntity>> getAllPendingWrites() async {
+    return _queryAdapter.queryList(
+        'SELECT * FROM pending_writes ORDER BY id ASC',
+        mapper: (Map<String, Object?> row) => PendingWriteEntity(
+            id: row['id'] as int?,
+            collection: row['collection'] as String,
+            docId: row['docId'] as String,
+            operation: row['operation'] as String,
+            dataJson: row['dataJson'] as String,
+            createdAt: row['createdAt'] as String));
+  }
+
+  @override
+  Future<void> deletePendingWrite(int id) async {
+    await _queryAdapter.queryNoReturn(
+        'DELETE FROM pending_writes WHERE id = ?1',
+        arguments: [id]);
+  }
+
+  @override
+  Future<int> insertPendingWrite(PendingWriteEntity write) {
+    return _pendingWriteEntityInsertionAdapter.insertAndReturnId(
+        write, OnConflictStrategy.abort);
   }
 }

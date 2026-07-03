@@ -1,10 +1,15 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:new_version/controllers/auth/auth_controller.dart';
 import 'package:new_version/controllers/map/map_controller.dart';
-import 'package:new_version/utils/routes.dart';
+import 'package:new_version/models/user_role.dart';
+import 'package:new_version/routes/app_routes.dart';
+import 'package:new_version/services/connectivity_service.dart';
+import 'package:new_version/views/admin/admin_main_view.dart';
 import '../auth/choose_view.dart';
 
 class SplashView extends StatefulWidget {
@@ -36,6 +41,36 @@ class _SplashViewState extends State<SplashView> {
     
     if (isFirstTime) {
       Get.offNamed(AppRoutes.intro);
+      return;
+    }
+
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final lastRoleStr = box.read('lastUserRole') as String?;
+    
+    if (currentUser != null && lastRoleStr != null) {
+      final lastRole = UserRole.values.firstWhere(
+        (r) => r.name == lastRoleStr,
+        orElse: () => UserRole.customer,
+      );
+      
+      if (Get.find<ConnectivityService>().isConnected.value) {
+        // Online: re-validate status against Firestore (handles revoked/blocked accounts)
+        await Get.find<AuthController>().routeAuthenticatedUser(currentUser.uid, lastRole);
+      } else {
+        // Offline: trust the cached role, route directly without Firestore checks.
+        // Reuse the same navigation targets as routeAuthenticatedUser's happy path.
+        switch (lastRole) {
+          case UserRole.staff:
+            Get.offAllNamed(AppRoutes.staffMain);
+            break;
+          case UserRole.admin:
+            Get.offAll(() => const AdminMainView());
+            break;
+          case UserRole.customer:
+            Get.offAllNamed(AppRoutes.driverMain);
+            break;
+        }
+      }
     } else {
       Get.off(() => const ChooseView());
     }

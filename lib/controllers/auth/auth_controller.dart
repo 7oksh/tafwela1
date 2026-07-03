@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:new_version/models/user_role.dart';
 import 'package:new_version/utils/social_auth_config.dart';
@@ -9,7 +10,7 @@ import 'package:new_version/views/auth/login_view.dart';
 import 'package:new_version/views/auth/pending_view.dart';
 import 'package:new_version/views/auth/blocked_employee_view.dart';
 import 'package:new_version/views/admin/admin_main_view.dart';
-import 'package:new_version/utils/routes.dart';
+import 'package:new_version/routes/app_routes.dart';
 import 'package:new_version/utils/exceptions.dart';
 import '../../services/connectivity_service.dart';
 import 'package:new_version/utils/app_snackbar.dart';
@@ -44,7 +45,7 @@ class AuthController extends GetxController {
         email: email.trim(),
         password: password.trim(),
       );
-      await _routeAuthenticatedUser(credential.user!.uid, userType);
+      await routeAuthenticatedUser(credential.user!.uid, userType);
     } on FirebaseAuthException catch (e) {
       _handleAuthError(e);
     } finally {
@@ -111,7 +112,7 @@ class AuthController extends GetxController {
         await _createSocialCustomer(user);
       }
     }
-    await _routeAuthenticatedUser(user.uid, userType);
+    await routeAuthenticatedUser(user.uid, userType);
   }
 
   Future<void> _createSocialCustomer(User user) async {
@@ -132,12 +133,16 @@ class AuthController extends GetxController {
     });
   }
 
-  Future<void> _routeAuthenticatedUser(String uid, UserRole userType) async {
+  Future<void> routeAuthenticatedUser(String uid, UserRole userType) async {
+    final box = GetStorage('Settings');
+    
     if (userType == UserRole.staff) {
       final staffDoc = await _firestore.collection('staff').doc(uid).get();
       if (staffDoc.exists) {
         final status = staffDoc.data()?['status'];
         if (status == 'approved') {
+          await box.write('lastUserRole', userType.name);
+          await box.write('lastUserUid', uid);
           Get.offAllNamed(AppRoutes.staffMain);
         } else if (status == 'denied') {
           Get.offAll(() => const BlockedEmployeeView());
@@ -150,6 +155,8 @@ class AuthController extends GetxController {
     } else if (userType == UserRole.admin) {
       final adminDoc = await _firestore.collection('admins').doc(uid).get();
       if (adminDoc.exists) {
+        await box.write('lastUserRole', userType.name);
+        await box.write('lastUserUid', uid);
         Get.offAll(() => const AdminMainView());
       } else {
         AppSnackbar.warning('هذا الحساب ليس مسؤولاً', title: 'تنبيه');
@@ -157,6 +164,8 @@ class AuthController extends GetxController {
     } else {
       final userDoc = await _firestore.collection('users').doc(uid).get();
       if (userDoc.exists) {
+        await box.write('lastUserRole', userType.name);
+        await box.write('lastUserUid', uid);
         Get.offAllNamed(AppRoutes.driverMain);
       } else {
         AppSnackbar.error('حسابك مش مسجل كسائق', title: 'خطأ');
@@ -233,6 +242,10 @@ class AuthController extends GetxController {
   }
 
   Future<void> signOut(UserRole userType) async {
+    final box = GetStorage('Settings');
+    await box.remove('lastUserRole');
+    await box.remove('lastUserUid');
+    
     await Future.wait([
       _googleSignIn.signOut(),
       FacebookAuth.instance.logOut(),
