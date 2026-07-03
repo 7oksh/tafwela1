@@ -1,8 +1,10 @@
 import 'package:get/get.dart';
 import 'package:new_version/controllers/driver/location_controller.dart';
+import 'package:new_version/models/place_result.dart';
 import 'package:new_version/models/station_model.dart';
 import 'package:new_version/services/connectivity_service.dart';
 import 'package:new_version/services/database_service.dart';
+import 'package:new_version/services/nominatim_service.dart';
 import 'package:new_version/services/osrm_service.dart';
 import 'package:new_version/services/overpass_service.dart';
 import 'package:new_version/utils/exceptions.dart';
@@ -20,6 +22,7 @@ class StationController extends GetxController {
   final DatabaseService _databaseService;
   final OverpassService _overpassService = Get.find<OverpassService>();
   final OsrmService _osrmService = Get.find<OsrmService>();
+  final NominatimService _nominatimService = Get.find<NominatimService>();
 
   final stations = <StationModel>[].obs;
   final filteredStations = <StationModel>[].obs;
@@ -28,6 +31,10 @@ class StationController extends GetxController {
   final isFindingFastest = false.obs;
   final searchQuery = ''.obs;
   final isFromCache = false.obs;
+
+  // External place search
+  final placeResults = <PlaceResult>[].obs;
+  final isSearchingPlaces = false.obs;
 
   bool _wasOffline = false;
 
@@ -104,11 +111,58 @@ class StationController extends GetxController {
     selectedStation.value = null;
   }
 
+  void endTrip() {
+    final current = selectedStation.value;
+    if (current != null) {
+      // Reset the route on the station so DriverMapView stops drawing it
+      final cleared = current.copyWith(routePolyline: [], duration: 0);
+      final idx = stations.indexWhere((s) => s.id == current.id);
+      if (idx != -1) stations[idx] = cleared;
+    }
+    selectedStation.value = null;
+    _applyFilter();
+  }
+
   StationModel? findById(String id) {
     try {
       return stations.firstWhere((s) => s.id == id);
     } catch (_) {
       return null;
+    }
+  }
+
+  // ── External place search ──────────────────────────────────────────────────
+
+  /// Search for external places using Nominatim geocoding API.
+  /// Only runs when online and query is at least 3 characters.
+  Future<void> searchExternalPlaces(String query) async {
+    if (query.trim().length < 3) {
+      placeResults.clear();
+      return;
+    }
+
+    // Only search if online
+    if (!Get.isRegistered<ConnectivityService>() ||
+        !Get.find<ConnectivityService>().isConnected.value) {
+      placeResults.clear();
+      return;
+    }
+
+    isSearchingPlaces.value = true;
+    try {
+      final location = Get.isRegistered<LocationController>()
+          ? Get.find<LocationController>()
+          : null;
+      
+      final results = await _nominatimService.search(
+        query,
+        lat: location?.currentLatLng.latitude,
+        lng: location?.currentLatLng.longitude,
+      );
+      
+      placeResults.assignAll(results);
+    } finally {
+      isSearchingPlaces.value = false;
     }
   }
 

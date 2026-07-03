@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,6 +10,7 @@ import 'package:new_version/utils/constants.dart';
 import 'package:new_version/views/driver/driver_preferences_screen.dart';
 import 'package:new_version/views/driver/station_details_screen.dart';
 import 'package:new_version/views/widgets/driver/driver_map_view.dart';
+import 'package:new_version/views/widgets/driver/place_search_results.dart';
 import 'package:new_version/views/widgets/common/search_bar.dart';
 import 'package:new_version/views/widgets/driver/station_card.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -25,6 +28,8 @@ class _HomeScreenState extends State<HomeScreen> {
   late final LocationController _locationController;
   late final StationController _stationController;
 
+  Timer? _debounceTimer;
+
   @override
   void initState() {
     super.initState();
@@ -35,8 +40,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _debounceTimer?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String query) {
+    // Local filter runs immediately (fast, in-memory)
+    _stationController.search(query);
+
+    // External geocoding search is debounced (network call)
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
+      _stationController.searchExternalPlaces(query);
+    });
   }
 
   // ── Showcase style مشترك ──
@@ -86,10 +103,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     titleTextStyle: _showcaseTitle,
                     descTextStyle: _showcaseDesc,
                     tooltipBackgroundColor: AppColors.white,
-                    child: SearchBarWidget(
-                      controller: _searchController,
-                      onChanged: _stationController.search,
-                      onFilterTap: () => _homeController.changeTab(1),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SearchBarWidget(
+                          controller: _searchController,
+                          onChanged: _onSearchChanged,
+                          onFilterTap: () => _homeController.changeTab(1),
+                        ),
+                        const PlaceSearchResults(),
+                      ],
                     ),
                   ),
                 ],
@@ -251,9 +274,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: 12),
-              SearchBarWidget(
-                controller: _searchController,
-                onChanged: _stationController.search,
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SearchBarWidget(
+                    controller: _searchController,
+                    onChanged: _onSearchChanged,
+                  ),
+                  const PlaceSearchResults(),
+                ],
               ),
             ],
           ),

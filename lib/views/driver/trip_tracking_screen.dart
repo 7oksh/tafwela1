@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:new_version/controllers/driver/location_controller.dart';
+import 'package:new_version/controllers/driver/station_controller.dart';
 import 'package:new_version/models/station_model.dart';
 import 'package:new_version/services/osrm_service.dart';
 import 'package:new_version/utils/constants.dart';
@@ -38,6 +39,20 @@ class _TripTrackingScreenState extends State<TripTrackingScreen> {
   bool _arrived = false;
   bool _cancelled = false;
 
+  // Rerouting throttle
+  DateTime? _lastRouteUpdate;
+  LatLng? _lastFetchOrigin;
+
+  // Arrival detection - require sustained confirmation
+  int _consecutiveArrivedReadings = 0;
+
+  // Speed plausibility check - track last accepted reading
+  LatLng? _lastAcceptedPosition;
+  DateTime? _lastAcceptedTime;
+
+  // Sanity check timer
+  Timer? _sanityCheckTimer;
+
   late final LatLng _destination;
 
   /// latlong2 distance calculator — replaces the custom haversine formula.
@@ -57,19 +72,25 @@ class _TripTrackingScreenState extends State<TripTrackingScreen> {
         _distance.as(LengthUnit.Kilometer, _currentLatLng, _destination);
     _remainingMinutes = _estimateMinutes(_remainingKm);
 
+    // Initialize speed plausibility tracking
+    _lastAcceptedPosition = _currentLatLng;
+    _lastAcceptedTime = DateTime.now();
+
     _fetchRoute();
     _startLocationStream();
+    _startSanityCheckTimer();
   }
 
   @override
   void dispose() {
     _locationSub?.cancel();
+    _sanityCheckTimer?.cancel();
     super.dispose();
   }
 
   // ── Route fetching ──────────────────────────────────────────────────────────
 
-  Future<void> _fetchRoute() async {
+  Future<void> _fetchRoute({bool fitCamera = true}) async {
     try {
       final result = await Get.find<OsrmService>().getRoute(
         _currentLatLng.latitude,
@@ -87,15 +108,17 @@ class _TripTrackingScreenState extends State<TripTrackingScreen> {
           _routeError = null;
           _remainingMinutes = (result.durationSeconds / 60).ceil();
           _remainingKm = result.distanceMeters / 1000;
+          _lastRouteUpdate = DateTime.now();
+          _lastFetchOrigin = _currentLatLng;
         });
-        _fitBounds(_polylineCoords);
+        if (fitCamera) _fitBounds(_polylineCoords);
       } else {
         setState(() {
           _polylineCoords = [_currentLatLng, _destination];
           _isLoadingRoute = false;
           _routeError = 'تعذّر جلب الطريق، يُعرض خط مستقيم';
         });
-        _fitBounds([_currentLatLng, _destination]);
+        if (fitCamera) _fitBounds([_currentLatLng, _destination]);
       }
     } catch (e) {
       debugPrint('Route fetch exception: $e');
@@ -105,7 +128,7 @@ class _TripTrackingScreenState extends State<TripTrackingScreen> {
         _isLoadingRoute = false;
         _routeError = 'تعذّر الاتصال، يُعرض خط مستقيم';
       });
-      _fitBounds([_currentLatLng, _destination]);
+      if (fitCamera) _fitBounds([_currentLatLng, _destination]);
     }
   }
 
@@ -145,22 +168,123 @@ class _TripTrackingScreenState extends State<TripTrackingScreen> {
         accuracy: LocationAccuracy.high,
         distanceFilter: 10, // update every 10 m
       ),
-    ).listen((pos) {
+    ).listen((pos) async {
       if (!mounted || _cancelled) return;
+
+      // Fix 1: Filter out low-accuracy GPS readings
+      // Skip readings with >30m error radius (common with signal multipath in urban areas)
+      if (pos.accuracy > 30) {
+        debugPrint('GPS accuracy too low (${pos.accuracy.toStringAsFixed(1)}m), skipping update');
+        return;
+      }
+
       final newLatLng = LatLng(pos.latitude, pos.longitude);
+      final now = DateTime.now();
+
+      // Fix 4: Speed plausibility check - reject physically impossible GPS jumps
+      if (_lastAcceptedPosition != null && _lastAcceptedTime != null) {
+        final elapsedSeconds = now.difference(_lastAcceptedTime!).inMilliseconds / 1000;
+        if (elapsedSeconds > 0) {
+          final jumpDistanceMeters = _distance.as(
+            LengthUnit.Meter,
+            _lastAcceptedPosition!,
+            newLatLng,
+          );
+          final impliedSpeedKmh = (jumpDistanceMeters / elapsedSeconds) * 3.6;
+
+          // Reject readings implying faster than ~140 km/h — physically implausible
+          // for a driver navigating city streets, and a strong signature of a GPS jump.
+          if (impliedSpeedKmh > 140) {
+            debugPrint('Rejected GPS jump: implied speed ${impliedSpeedKmh.toStringAsFixed(0)} km/h');
+            return;
+          }
+        }
+      }
+
       final dist =
           _distance.as(LengthUnit.Kilometer, newLatLng, _destination);
+
+      // Fix 2 & 3: Require sustained arrival with relaxed threshold
+      // Changed from 0.05km (50m) to 0.08km (80m) for dense urban GPS conditions
+      if (dist < 0.08 && pos.accuracy <= 30) {
+        _consecutiveArrivedReadings++;
+        if (_consecutiveArrivedReadings >= 3) {
+          if (!_arrived) {
+            debugPrint('Arrival confirmed after 3 consecutive good readings');
+          }
+          _arrived = true;
+        }
+      } else {
+        _consecutiveArrivedReadings = 0;
+        _arrived = false;
+      }
 
       setState(() {
         _currentLatLng = newLatLng;
         _remainingKm = dist;
         _remainingMinutes = _estimateMinutes(dist);
-        if (dist < 0.05) _arrived = true;
       });
+
+      // Update last accepted position for next plausibility check
+      _lastAcceptedPosition = newLatLng;
+      _lastAcceptedTime = now;
+
+      // Live rerouting: check if we should fetch a new route
+      final lastUpdate = _lastRouteUpdate;
+      final lastOrigin = _lastFetchOrigin;
+
+      if (lastUpdate != null && 
+          lastOrigin != null && 
+          now.difference(lastUpdate).inSeconds >= 15) {
+        // Check if moved more than ~30 meters from last fetch point
+        final movedDistance = _distance.as(
+          LengthUnit.Meter, 
+          newLatLng, 
+          lastOrigin,
+        );
+        
+        if (movedDistance > 30) {
+          // Fetch new route without camera jump
+          await _fetchRoute(fitCamera: false);
+        }
+      }
 
       // Smoothly follow user
       if (_isMapReady) {
         _mapController.move(newLatLng, _mapController.camera.zoom);
+      }
+    });
+  }
+
+  /// Periodic sanity check to self-correct if a bad reading got through
+  void _startSanityCheckTimer() {
+    _sanityCheckTimer = Timer.periodic(const Duration(seconds: 20), (_) async {
+      if (!mounted || _cancelled || _arrived) return;
+
+      try {
+        final freshPos = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+        );
+
+        if (freshPos.accuracy <= 30) {
+          final freshLatLng = LatLng(freshPos.latitude, freshPos.longitude);
+          final freshDist = _distance.as(LengthUnit.Kilometer, freshLatLng, _destination);
+
+          // Only correct if there's a meaningful discrepancy from the displayed value —
+          // avoids fighting with the live stream over normal small variations.
+          if ((freshDist - _remainingKm).abs() > 0.1) {
+            setState(() {
+              _currentLatLng = freshLatLng;
+              _remainingKm = freshDist;
+              _remainingMinutes = _estimateMinutes(freshDist);
+            });
+            _lastAcceptedPosition = freshLatLng;
+            _lastAcceptedTime = DateTime.now();
+            debugPrint('Sanity check corrected position (discrepancy: ${((freshDist - _remainingKm).abs() * 1000).toStringAsFixed(0)}m)');
+          }
+        }
+      } catch (_) {
+        // Silent — this is a background sanity check, not critical path
       }
     });
   }
@@ -172,10 +296,17 @@ class _TripTrackingScreenState extends State<TripTrackingScreen> {
     return (km / 30 * 60).ceil();
   }
 
-  void _cancelTrip() {
+  void _endTripAndReturn() {
     _locationSub?.cancel();
     setState(() => _cancelled = true);
+    if (Get.isRegistered<StationController>()) {
+      Get.find<StationController>().endTrip();
+    }
     Get.back();
+  }
+
+  void _cancelTrip() {
+    _endTripAndReturn();
   }
 
   // ── Build ───────────────────────────────────────────────────────────────────
@@ -512,7 +643,7 @@ class _TripTrackingScreenState extends State<TripTrackingScreen> {
               icon: Icons.check,
               color: AppColors.success,
               filled: true,
-              onTap: Get.back,
+              onTap: _endTripAndReturn,
             ),
         ],
       ),

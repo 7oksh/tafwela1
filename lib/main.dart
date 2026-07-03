@@ -15,6 +15,7 @@ import 'package:new_version/services/biometric_auth_service.dart';
 import 'package:dio/dio.dart';
 import 'package:new_version/services/overpass_service.dart';
 import 'package:new_version/services/osrm_service.dart';
+import 'package:new_version/services/nominatim_service.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -46,6 +47,7 @@ class MyApp extends StatelessWidget {
         Get.put(dio);
         Get.put(OverpassService(dio));
         Get.put(OsrmService(dio));
+        Get.put(NominatimService(dio));
       }),
     );
   }
