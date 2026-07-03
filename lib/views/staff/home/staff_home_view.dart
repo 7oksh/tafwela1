@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:new_version/controllers/home/status_controller.dart';
-import 'package:new_version/controllers/home/timer_controller.dart';
-import 'package:new_version/widgets/staff_home/countdown_card.dart';
-import 'package:new_version/widgets/staff_home/header_widget.dart';
-import 'package:new_version/widgets/staff_home/status_card.dart';
-import 'package:new_version/widgets/staff_home/warning_card.dart';
+import 'package:new_version/controllers/staff/status_controller.dart';
+import 'package:new_version/controllers/staff/timer_controller.dart';
+import 'package:new_version/views/widgets/staff/home/countdown_card.dart';
+import 'package:new_version/views/widgets/staff/home/header_widget.dart';
+import 'package:new_version/views/widgets/staff/home/status_card.dart';
+import 'package:new_version/views/widgets/staff/home/warning_card.dart';
 import 'package:showcaseview/showcaseview.dart';
 
 class StaffHomeView extends StatefulWidget {

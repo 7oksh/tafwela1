@@ -1,23 +1,45 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:get/get.dart';
 import 'package:new_version/models/fuel_type_model.dart';
 import 'package:new_version/models/station_model.dart';
+import 'package:new_version/models/stations_result.dart';
 import 'package:new_version/models/user_model.dart';
+import 'package:new_version/services/local_database_service.dart';
+import 'package:new_version/services/sync_service.dart';
 
 class DatabaseService {
-  DatabaseService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+  DatabaseService({
+    FirebaseFirestore? firestore,
+    LocalDatabaseService? localDb,
+    SyncService? syncService,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _localDb = localDb,
+        _syncService = syncService;
 
   final FirebaseFirestore _firestore;
+  final LocalDatabaseService? _localDb;
+  final SyncService? _syncService;
 
-  Future<List<StationModel>> fetchStations() async {
+  LocalDatabaseService get _localDbResolved =>
+      _localDb ?? Get.find<LocalDatabaseService>();
+
+  SyncService get _syncServiceResolved =>
+      _syncService ?? Get.find<SyncService>();
+
+  Future<StationsResult> fetchStations() async {
     try {
       final snapshot = await _firestore.collection('stations').get();
-      if (snapshot.docs.isEmpty) return _mockStations;
-      return snapshot.docs
+      final stations = snapshot.docs
           .map((doc) => StationModel.fromMap({...doc.data(), 'id': doc.id}))
           .toList();
+      await _localDbResolved.cacheStations(stations);
+      return StationsResult(stations: stations, fromCache: false);
     } catch (_) {
-      return _mockStations;
+      final cached = await _localDbResolved.getCachedStations();
+      if (cached.isNotEmpty) {
+        return StationsResult(stations: cached, fromCache: true);
+      }
+      return StationsResult(stations: _mockStations, fromCache: false);
     }
   }
 
@@ -32,7 +54,19 @@ class DatabaseService {
   }
 
   Future<void> updateUser(String uid, Map<String, dynamic> data) async {
-    await _firestore.collection('users').doc(uid).update(data);
+    await _syncServiceResolved.writeOrQueue(
+      collection: 'users',
+      docId: uid,
+      data: data,
+    );
+  }
+
+  Future<void> syncFavoriteIds(String uid, List<String> favoriteIds) async {
+    await _syncServiceResolved.writeOrQueue(
+      collection: 'users',
+      docId: uid,
+      data: {'favoriteStationIds': favoriteIds},
+    );
   }
 
   static final List<StationModel> _mockStations = [

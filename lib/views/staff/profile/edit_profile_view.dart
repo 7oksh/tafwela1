@@ -8,7 +8,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:new_version/utils/app_snackbar.dart';
-import 'package:new_version/controllers/staff_controller.dart';
+import 'package:new_version/controllers/staff/staff_controller.dart';
 
 /// Returns the correct [ImageProvider] for a stored photo value.
 /// Handles base64 data URIs (data:image/...;base64,...) and plain URLs.

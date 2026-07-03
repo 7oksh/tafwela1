@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:new_version/controllers/staff_controller.dart';
-import 'package:new_version/widgets/staff_profile/logout_button.dart';
-import 'package:new_version/widgets/staff_profile/profile_header.dart';
-import 'package:new_version/widgets/staff_profile/settings_section.dart';
-import 'package:new_version/widgets/staff_profile/staff_info_card.dart';
+import 'package:new_version/controllers/staff/staff_controller.dart';
+import 'package:new_version/views/widgets/staff/profile/logout_button.dart';
+import 'package:new_version/views/widgets/staff/profile/profile_header.dart';
+import 'package:new_version/views/widgets/staff/profile/settings_section.dart';
+import 'package:new_version/views/widgets/staff/profile/staff_info_card.dart';
 
 class ProfileView extends StatelessWidget {
   const ProfileView({super.key});

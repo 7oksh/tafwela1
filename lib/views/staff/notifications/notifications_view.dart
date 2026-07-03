@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:new_version/controllers/notification/notification_controller.dart';
-import 'package:new_version/widgets/staff_home/notification_item.dart';
+import 'package:new_version/views/widgets/staff/home/notification_item.dart';
 
 class NotificationsView extends StatelessWidget {
   const NotificationsView({super.key});
