@@ -32,7 +32,19 @@ class DriverMapView extends StatelessWidget {
           ),
         );
       }).toList();
-
+      // User Marker
+      markers.add(
+        Marker(
+          point: locationCtrl.currentLatLng,
+          width: 50,
+          height: 50,
+          child: const Icon(
+            Icons.my_location,
+            color: Colors.blue,
+            size: 35,
+          ),
+        ),
+      );
       // Route polyline for selected station
       final routePoints = selected?.routePolyline ?? [];
 
@@ -86,15 +98,38 @@ class DriverMapView extends StatelessWidget {
                   : AppColors.primaryBlue,
               child: stationCtrl.isFindingFastest.value
                   ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        color: AppColors.white,
-                      ),
-                    )
-                  : const Icon(Icons.rocket_launch, color: AppColors.white),
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: AppColors.white,
+                ),
+              )
+                  : const Icon(
+                Icons.rocket_launch,
+                color: AppColors.white,
+              ),
             ),
+          ),
+
+          Positioned(
+            bottom: 240,
+            right: 16,
+            child: Obx(() {
+              if (stationCtrl.selectedStation.value == null) {
+                return const SizedBox();
+              }
+
+              return FloatingActionButton.small(
+                heroTag: 'clearRoute',
+                backgroundColor: Colors.white,
+                onPressed: stationCtrl.clearSelection,
+                child: const Icon(
+                  Icons.close,
+                  color: Colors.red,
+                ),
+              );
+            }),
           ),
         ],
       );

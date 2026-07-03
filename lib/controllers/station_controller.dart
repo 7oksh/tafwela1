@@ -6,10 +6,15 @@ import 'package:new_version/services/osrm_service.dart';
 import 'package:new_version/services/overpass_service.dart';
 import 'package:new_version/utils/exceptions.dart';
 import 'package:new_version/utils/app_snackbar.dart';
+import 'package:geolocator/geolocator.dart';
 
 class StationController extends GetxController {
   StationController({DatabaseService? databaseService})
       : _databaseService = databaseService ?? DatabaseService();
+
+  Position? _lastRoutePosition;
+
+  bool _isUpdatingRoute = false;
 
   final DatabaseService _databaseService;
   final OverpassService _overpassService = Get.find<OverpassService>();
@@ -82,7 +87,9 @@ class StationController extends GetxController {
     selectedStation.value = station;
   }
 
-  void clearSelection() => selectedStation.value = null;
+  void clearSelection() {
+    selectedStation.value = null;
+  }
 
   StationModel? findById(String id) {
     try {
@@ -153,6 +160,73 @@ class StationController extends GetxController {
       AppSnackbar.error('حدث خطأ غير متوقع');
     } finally {
       isFindingFastest.value = false;
+    }
+  }
+  Future<void> updateRouteIfNeeded() async {
+    final station = selectedStation.value;
+    if (station == null) return;
+
+    if (!Get.isRegistered<LocationController>()) return;
+
+    final location = Get.find<LocationController>();
+    final current = location.currentPosition.value;
+
+    if (current == null) return;
+
+    // أول مرة نخزن الموقع
+    if (_lastRoutePosition == null) {
+      _lastRoutePosition = current;
+      return;
+    }
+
+    // إعادة الحساب بعد التحرك 20 متر
+    final moved = Geolocator.distanceBetween(
+      _lastRoutePosition!.latitude,
+      _lastRoutePosition!.longitude,
+      current.latitude,
+      current.longitude,
+    );
+
+    if (moved < 20) return;
+
+    // منع أكثر من Request في نفس الوقت
+    if (_isUpdatingRoute) return;
+    _isUpdatingRoute = true;
+
+    try {
+      final route = await _osrmService.getRoute(
+        current.latitude,
+        current.longitude,
+        station.latitude,
+        station.longitude,
+      );
+
+      if (route == null) return;
+
+      final updatedStation = station.copyWith(
+        distanceKm: route.distanceMeters / 1000,
+        duration: route.durationSeconds,
+        routePolyline: route.polyline,
+      );
+
+      // تحديث المحطة المختارة
+      selectedStation.value = updatedStation;
+
+      // تحديث القائمة أيضاً
+      stations.assignAll(
+        stations.map((s) {
+          if (s.id == updatedStation.id) {
+            return updatedStation;
+          }
+          return s;
+        }).toList(),
+      );
+
+      _applyFilter();
+
+      _lastRoutePosition = current;
+    } finally {
+      _isUpdatingRoute = false;
     }
   }
 }

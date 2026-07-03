@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:new_version/services/location_service.dart';
+
 import 'package:new_version/controllers/station_controller.dart';
+import 'package:new_version/services/location_service.dart';
 
 class LocationController extends GetxController {
   LocationController({LocationService? locationService})
@@ -13,9 +16,11 @@ class LocationController extends GetxController {
 
   final currentPosition = Rxn<Position>();
   final isMapReady = false.obs;
+  final isLocationLoading = true.obs;
 
-  /// flutter_map controller — created here, shared with the FlutterMap widget.
   final mapController = MapController();
+
+  StreamSubscription<Position>? _positionStream;
 
   static const defaultLocation = LatLng(30.0444, 31.2357);
 
@@ -28,18 +33,21 @@ class LocationController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchLocation();
-  }
 
-  final isLocationLoading = true.obs;
+    fetchLocation();
+    _startLocationTracking();
+  }
 
   Future<void> fetchLocation() async {
     isLocationLoading.value = true;
+
     try {
       final position = await _locationService.getCurrentPosition();
+
       if (position != null) {
         currentPosition.value = position;
         _moveToCurrentLocation();
+
         if (Get.isRegistered<StationController>()) {
           Get.find<StationController>().refreshDistances();
         }
@@ -49,6 +57,30 @@ class LocationController extends GetxController {
     }
   }
 
+  void _startLocationTracking() {
+    const settings = LocationSettings(
+      accuracy: LocationAccuracy.best,
+      distanceFilter: 5,
+    );
+
+    _positionStream = Geolocator.getPositionStream(
+      locationSettings: settings,
+    ).listen((position) {
+      currentPosition.value = position;
+
+      if (isMapReady.value) {
+        mapController.move(
+          LatLng(position.latitude, position.longitude),
+          mapController.camera.zoom,
+        );
+      }
+
+      if (Get.isRegistered<StationController>()) {
+        Get.find<StationController>().refreshDistances();
+      }
+    });
+  }
+
   void onMapReady() {
     isMapReady.value = true;
     _moveToCurrentLocation();
@@ -56,6 +88,7 @@ class LocationController extends GetxController {
 
   void _moveToCurrentLocation() {
     if (!isMapReady.value) return;
+
     mapController.move(currentLatLng, 14);
   }
 
@@ -67,14 +100,25 @@ class LocationController extends GetxController {
     }
   }
 
-  double distanceTo({required double lat, required double lng}) {
+  double distanceTo({
+    required double lat,
+    required double lng,
+  }) {
     final pos = currentPosition.value;
+
     if (pos == null) return 0;
+
     return _locationService.distanceInKm(
       fromLat: pos.latitude,
       fromLng: pos.longitude,
       toLat: lat,
       toLng: lng,
     );
+  }
+
+  @override
+  void onClose() {
+    _positionStream?.cancel();
+    super.onClose();
   }
 }
