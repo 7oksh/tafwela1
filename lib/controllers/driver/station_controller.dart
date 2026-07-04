@@ -9,11 +9,12 @@ import 'package:new_version/services/osrm_service.dart';
 import 'package:new_version/services/overpass_service.dart';
 import 'package:new_version/utils/exceptions.dart';
 import 'package:new_version/utils/app_snackbar.dart';
+import 'package:new_version/services/search_preferences_service.dart';
 import 'package:geolocator/geolocator.dart';
 
 class StationController extends GetxController {
   StationController({DatabaseService? databaseService})
-      : _databaseService = databaseService ?? DatabaseService();
+    : _databaseService = databaseService ?? DatabaseService();
 
   Position? _lastRoutePosition;
 
@@ -23,6 +24,8 @@ class StationController extends GetxController {
   final OverpassService _overpassService = Get.find<OverpassService>();
   final OsrmService _osrmService = Get.find<OsrmService>();
   final NominatimService _nominatimService = Get.find<NominatimService>();
+  final SearchPreferencesService _preferences =
+      Get.find<SearchPreferencesService>();
 
   final stations = <StationModel>[].obs;
   final filteredStations = <StationModel>[].obs;
@@ -49,6 +52,11 @@ class StationController extends GetxController {
       }
       _wasOffline = connected != true;
     });
+    
+    ever(_preferences.updateTrigger, (_) {
+      applyPreferencesAndSearch();
+    });
+    
     loadStations();
   }
 
@@ -59,6 +67,7 @@ class StationController extends GetxController {
       isFromCache.value = result.fromCache;
       stations.assignAll(_withDistance(result.stations));
       _applyFilter();
+      _applySorting();
     } finally {
       isLoading.value = false;
     }
@@ -68,6 +77,7 @@ class StationController extends GetxController {
     if (stations.isEmpty) return;
     stations.assignAll(_withDistance(stations.toList()));
     _applyFilter();
+    _applySorting();
   }
 
   List<StationModel> _withDistance(List<StationModel> list) {
@@ -79,28 +89,68 @@ class StationController extends GetxController {
             distanceKm: location.distanceTo(lat: s.latitude, lng: s.longitude),
           ),
         )
-        .toList()
-      ..sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
+        .toList();
   }
 
   void search(String query) {
     searchQuery.value = query;
     _applyFilter();
+    _applySorting();
   }
 
   void _applyFilter() {
     final q = searchQuery.value.trim().toLowerCase();
-    if (q.isEmpty) {
-      filteredStations.assignAll(stations);
-      return;
+    Iterable<StationModel> result = stations;
+
+    if (_preferences.openStationsOnly) {
+      result = result.where((s) => s.isOpen);
     }
-    filteredStations.assignAll(
-      stations.where(
+
+    if (q.isNotEmpty) {
+      result = result.where(
         (s) =>
             s.name.toLowerCase().contains(q) ||
             s.address.toLowerCase().contains(q),
-      ),
-    );
+      );
+    }
+
+    filteredStations.assignAll(result);
+  }
+
+  void _applySorting() {
+    final sortType = _preferences.sortType;
+    final list = filteredStations.toList();
+    if (sortType == SortType.distance) {
+      list.sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
+    } else if (sortType == SortType.crowd) {
+      list.sort((a, b) {
+        int crowdValue(CrowdStatus s) {
+          switch (s) {
+            case CrowdStatus.low:
+              return 0;
+            case CrowdStatus.medium:
+              return 1;
+            case CrowdStatus.high:
+              return 2;
+            case CrowdStatus.none:
+              return 3;
+          }
+        }
+
+        final aVal = crowdValue(a.crowdStatus);
+        final bVal = crowdValue(b.crowdStatus);
+        if (aVal != bVal) return aVal.compareTo(bVal);
+        return a.distanceKm.compareTo(b.distanceKm);
+      });
+    } else if (sortType == SortType.rating) {
+      list.sort((a, b) {
+        if (b.rating != a.rating) {
+          return b.rating.compareTo(a.rating);
+        }
+        return a.distanceKm.compareTo(b.distanceKm);
+      });
+    }
+    filteredStations.assignAll(list);
   }
 
   void selectStation(StationModel station) {
@@ -121,6 +171,7 @@ class StationController extends GetxController {
     }
     selectedStation.value = null;
     _applyFilter();
+    _applySorting();
   }
 
   StationModel? findById(String id) {
@@ -153,13 +204,13 @@ class StationController extends GetxController {
       final location = Get.isRegistered<LocationController>()
           ? Get.find<LocationController>()
           : null;
-      
+
       final results = await _nominatimService.search(
         query,
         lat: location?.currentLatLng.latitude,
         lng: location?.currentLatLng.longitude,
       );
-      
+
       placeResults.assignAll(results);
     } finally {
       isSearchingPlaces.value = false;
@@ -167,6 +218,93 @@ class StationController extends GetxController {
   }
 
   // ── Find the nearest & fastest gas station ────────────────────────────────
+
+  Future<List<StationModel>> _calculateRoutesForStations(
+    List<StationModel> nearby,
+    double userLat,
+    double userLng,
+    LocationController location,
+  ) async {
+    final List<StationModel> routed = [];
+    for (final station in nearby) {
+      final route = await _osrmService.getRoute(
+        userLat,
+        userLng,
+        station.latitude,
+        station.longitude,
+      );
+      if (route != null) {
+        routed.add(
+          station.copyWith(
+            duration: route.durationSeconds,
+            routePolyline: route.polyline,
+            distanceKm: route.distanceMeters / 1000,
+          ),
+        );
+      } else {
+        routed.add(
+          station.copyWith(
+            distanceKm: location.distanceTo(
+              lat: station.latitude,
+              lng: station.longitude,
+            ),
+          ),
+        );
+      }
+    }
+    return routed;
+  }
+
+  Future<void> applyPreferencesAndSearch() async {
+    if (!Get.isRegistered<LocationController>()) return;
+    final location = Get.find<LocationController>();
+    final userLat = location.currentLatLng.latitude;
+    final userLng = location.currentLatLng.longitude;
+
+    isLoading.value = true;
+    try {
+      final radius = _preferences.maxDistance;
+      final nearby = await _overpassService.fetchNearbyStations(
+        userLat,
+        userLng,
+        radiusInKm: radius,
+      );
+
+      if (nearby.isEmpty) {
+        AppSnackbar.warning(
+          'لم يتم العثور على محطات وقود قريبة',
+          title: 'تنبيه',
+        );
+        stations.clear();
+        _applyFilter();
+        _applySorting();
+        selectedStation.value = null;
+        return;
+      }
+
+      final routed = await _calculateRoutesForStations(
+        nearby,
+        userLat,
+        userLng,
+        location,
+      );
+      stations.assignAll(routed);
+      _applyFilter();
+      _applySorting();
+
+      if (filteredStations.isNotEmpty) {
+        selectedStation.value = filteredStations.first;
+      } else {
+        selectedStation.value = null;
+      }
+    } on ApiException catch (e) {
+      AppSnackbar.error(e.message);
+    } catch (_) {
+      AppSnackbar.error('حدث خطأ غير متوقع');
+    } finally {
+      isLoading.value = false;
+    }
+  }
 
   /// Fetches nearby stations from Overpass, calculates driving route via OSRM
   /// for each, sorts by duration, and selects the fastest one.
@@ -179,47 +317,40 @@ class StationController extends GetxController {
     isFindingFastest.value = true;
     try {
       // 1. Fetch nearby fuel stations from Overpass API
-      final nearby =
-          await _overpassService.fetchNearbyStations(userLat, userLng);
+      final nearby = await _overpassService.fetchNearbyStations(
+        userLat,
+        userLng,
+      );
 
       if (nearby.isEmpty) {
-        AppSnackbar.warning('لم يتم العثور على محطات وقود قريبة', title: 'تنبيه');
+        AppSnackbar.warning(
+          'لم يتم العثور على محطات وقود قريبة',
+          title: 'تنبيه',
+        );
         return;
       }
 
       // 2. Get driving route for each station via OSRM
-      final List<StationModel> routed = [];
-      for (final station in nearby) {
-        final route = await _osrmService.getRoute(
-          userLat,
-          userLng,
-          station.latitude,
-          station.longitude,
-        );
-        if (route != null) {
-          routed.add(station.copyWith(
-            duration: route.durationSeconds,
-            routePolyline: route.polyline,
-            distanceKm: route.distanceMeters / 1000,
-          ));
-        } else {
-          routed.add(station.copyWith(
-            distanceKm: location.distanceTo(
-              lat: station.latitude,
-              lng: station.longitude,
-            ),
-          ));
-        }
-      }
+      final routed = await _calculateRoutesForStations(
+        nearby,
+        userLat,
+        userLng,
+        location,
+      );
 
       // 3. Sort by driving duration (ascending — fastest first)
       routed.sort((a, b) => a.duration.compareTo(b.duration));
 
       // 4. Update reactive state
       stations.assignAll(routed);
+
       _applyFilter();
-      if (routed.isNotEmpty) {
-        selectedStation.value = routed.first;
+      _applySorting();
+
+      if (filteredStations.isNotEmpty) {
+        selectedStation.value = filteredStations.first;
+      } else {
+        selectedStation.value = null;
       }
     } on ApiException catch (e) {
       AppSnackbar.error(e.message);
@@ -229,6 +360,7 @@ class StationController extends GetxController {
       isFindingFastest.value = false;
     }
   }
+
   Future<void> updateRouteIfNeeded() async {
     final station = selectedStation.value;
     if (station == null) return;
@@ -290,7 +422,7 @@ class StationController extends GetxController {
       );
 
       _applyFilter();
-
+      _applySorting();
       _lastRoutePosition = current;
     } finally {
       _isUpdatingRoute = false;

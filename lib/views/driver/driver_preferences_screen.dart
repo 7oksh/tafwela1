@@ -1,70 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:new_version/utils/constants.dart';
-import 'package:new_version/utils/app_snackbar.dart';
+import 'package:new_version/services/search_preferences_service.dart';
+import 'package:new_version/controllers/driver/driver_preferences_controller.dart';
 
-class DriverPreferencesScreen extends StatefulWidget {
+class DriverPreferencesScreen extends StatelessWidget {
   const DriverPreferencesScreen({super.key});
 
   @override
-  State<DriverPreferencesScreen> createState() =>
-      _DriverPreferencesScreenState();
-}
-
-class _DriverPreferencesScreenState extends State<DriverPreferencesScreen> {
-  final _box = GetStorage();
-
-  late List<String> _selectedFuels;
-  late String _sortBy;
-  late bool _notifyOpenOnly;
-  late bool _notifyCrowdChanges;
-  late double _maxDistance;
-
-  final _fuelTypes = [
-    {'id': 'benzine_80', 'label': 'بنزين 80', 'icon': Icons.local_gas_station},
-    {'id': 'benzine_92', 'label': 'بنزين 92', 'icon': Icons.local_gas_station},
-    {'id': 'benzine_95', 'label': 'بنزين 95', 'icon': Icons.local_gas_station},
-    {'id': 'diesel', 'label': 'سولار', 'icon': Icons.oil_barrel},
-    {'id': 'electric', 'label': 'شحن كهربائي', 'icon': Icons.electric_bolt},
-  ];
-
-  final _sortOptions = [
-    {'id': 'distance', 'label': 'الأقرب أولاً'},
-    {'id': 'crowd', 'label': 'الأقل ازدحاماً'},
-    {'id': 'rating', 'label': 'الأعلى تقييماً'},
-  ];
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedFuels =
-        List<String>.from(_box.read<List>('pref_fuels') ?? ['benzine_92']);
-    _sortBy = _box.read<String>('pref_sort') ?? 'distance';
-    _notifyOpenOnly = _box.read<bool>('pref_open_only') ?? false;
-    _notifyCrowdChanges = _box.read<bool>('pref_crowd_notify') ?? true;
-    _maxDistance = (_box.read<double>('pref_max_dist') ?? 10.0);
-  }
-
-  void _save() {
-    _box.write('pref_fuels', _selectedFuels);
-    _box.write('pref_sort', _sortBy);
-    _box.write('pref_open_only', _notifyOpenOnly);
-    _box.write('pref_crowd_notify', _notifyCrowdChanges);
-    _box.write('pref_max_dist', _maxDistance);
-    Get.back();
-    AppSnackbar.success(
-      'تم حفظ تفضيلاتك بنجاح',
-      title: 'تم الحفظ',
-      position: SnackPosition.BOTTOM,
-      backgroundColor: AppColors.success,
-      textColor: AppColors.white,
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final controller = Get.find<DriverPreferencesController>();
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -85,119 +32,49 @@ class _DriverPreferencesScreenState extends State<DriverPreferencesScreen> {
           ),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        children: [
-          _SectionHeader(title: 'نوع الوقود المفضل'),
-          const SizedBox(height: 12),
-          _buildFuelGrid(),
-          const SizedBox(height: AppSpacing.lg),
-          _SectionHeader(title: 'ترتيب النتائج'),
-          const SizedBox(height: 12),
-          _buildSortOptions(),
-          const SizedBox(height: AppSpacing.lg),
-          _SectionHeader(title: 'أقصى مسافة'),
-          const SizedBox(height: 8),
-          _buildDistanceSlider(),
-          const SizedBox(height: AppSpacing.lg),
-          _SectionHeader(title: 'الإعدادات'),
-          const SizedBox(height: 12),
-          _buildSettingsTile(
-            icon: Icons.access_time_rounded,
-            title: 'المحطات المفتوحة فقط',
-            subtitle: 'إخفاء المحطات المغلقة',
-            value: _notifyOpenOnly,
-            onChanged: (v) => setState(() => _notifyOpenOnly = v),
-          ),
-          const SizedBox(height: 8),
-          _buildSettingsTile(
-            icon: Icons.notifications_active_outlined,
-            title: 'إشعارات تغيرات الازدحام',
-            subtitle: 'تلقي إشعار عند تغير الحالة',
-            value: _notifyCrowdChanges,
-            onChanged: (v) => setState(() => _notifyCrowdChanges = v),
-          ),
-          const SizedBox(height: 32),
-          _buildSaveButton(),
-          const SizedBox(height: 24),
-        ],
-      ),
+      body: Obx(() => ListView(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            children: [
+              const _SectionHeader(title: 'ترتيب النتائج'),
+              const SizedBox(height: 12),
+              _buildSortOptionsList(controller),
+              const SizedBox(height: AppSpacing.lg),
+              const _SectionHeader(title: 'أقصى مسافة'),
+              const SizedBox(height: 8),
+              _buildDistanceSlider(controller, context),
+              const SizedBox(height: AppSpacing.lg),
+              const _SectionHeader(title: 'الإعدادات'),
+              const SizedBox(height: 12),
+              _buildSettingsTile(
+                icon: Icons.access_time_rounded,
+                title: 'المحطات المفتوحة فقط',
+                subtitle: 'إخفاء المحطات المغلقة',
+                value: controller.notifyOpenOnly.value,
+                onChanged: (v) => controller.notifyOpenOnly.value = v,
+              ),
+              const SizedBox(height: 8),
+              _buildSettingsTile(
+                icon: Icons.notifications_active_outlined,
+                title: 'إشعارات تغيرات الازدحام',
+                subtitle: 'تلقي إشعار عند تغير الحالة',
+                value: controller.notifyCrowdChanges.value,
+                onChanged: (v) => controller.notifyCrowdChanges.value = v,
+              ),
+              const SizedBox(height: 32),
+              _buildSaveButton(controller),
+              const SizedBox(height: 24),
+            ],
+          )),
     );
   }
 
-  Widget _buildFuelGrid() {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Wrap(
-        spacing: 10,
-        runSpacing: 10,
-        children: _fuelTypes.map((f) {
-          final isSelected = _selectedFuels.contains(f['id'] as String);
-          return GestureDetector(
-            onTap: () => setState(() {
-              if (isSelected) {
-                if (_selectedFuels.length > 1) {
-                  _selectedFuels.remove(f['id']);
-                }
-              } else {
-                _selectedFuels.add(f['id'] as String);
-              }
-            }),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color:
-                    isSelected ? AppColors.primaryBlue : AppColors.background,
-                borderRadius: BorderRadius.circular(AppRadius.xl),
-                border: Border.all(
-                  color: isSelected
-                      ? AppColors.primaryBlue
-                      : AppColors.textMuted.withValues(alpha: 0.3),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    f['icon'] as IconData,
-                    size: 16,
-                    color:
-                        isSelected ? AppColors.white : AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    f['label'] as String,
-                    style: GoogleFonts.cairo(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected
-                          ? AppColors.white
-                          : AppColors.navyDark,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
+  Widget _buildSortOptionsList(DriverPreferencesController controller) {
+    final sortOptions = [
+      {'id': SortType.distance, 'label': 'الأقرب أولاً'},
+      {'id': SortType.crowd, 'label': 'الأقل ازدحاماً'},
+      {'id': SortType.rating, 'label': 'الأعلى تقييماً'},
+    ];
 
-  Widget _buildSortOptions() {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.white,
@@ -211,11 +88,11 @@ class _DriverPreferencesScreenState extends State<DriverPreferencesScreen> {
         ],
       ),
       child: Column(
-        children: _sortOptions.map((s) {
-          final id = s['id'] as String;
-          final isSelected = _sortBy == id;
+        children: sortOptions.map((s) {
+          final id = s['id'] as SortType;
+          final isSelected = controller.sortBy.value == id;
           return InkWell(
-            onTap: () => setState(() => _sortBy = id),
+            onTap: () => controller.sortBy.value = id,
             child: Padding(
               padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.md, vertical: 12),
@@ -268,7 +145,8 @@ class _DriverPreferencesScreenState extends State<DriverPreferencesScreen> {
     );
   }
 
-  Widget _buildDistanceSlider() {
+  Widget _buildDistanceSlider(
+      DriverPreferencesController controller, BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -296,13 +174,14 @@ class _DriverPreferencesScreenState extends State<DriverPreferencesScreen> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
                   color: AppColors.primaryBlue,
                   borderRadius: BorderRadius.circular(AppRadius.xl),
                 ),
                 child: Text(
-                  '${_maxDistance.round()} كم',
+                  '${controller.maxDistance.value.round()} كم',
                   style: GoogleFonts.cairo(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
@@ -320,11 +199,11 @@ class _DriverPreferencesScreenState extends State<DriverPreferencesScreen> {
               overlayColor: AppColors.primaryBlue.withValues(alpha: 0.1),
             ),
             child: Slider(
-              value: _maxDistance,
+              value: controller.maxDistance.value,
               min: 1,
               max: 50,
               divisions: 49,
-              onChanged: (v) => setState(() => _maxDistance = v),
+              onChanged: (v) => controller.maxDistance.value = v,
             ),
           ),
           Row(
@@ -395,9 +274,9 @@ class _DriverPreferencesScreenState extends State<DriverPreferencesScreen> {
     );
   }
 
-  Widget _buildSaveButton() {
+  Widget _buildSaveButton(DriverPreferencesController controller) {
     return GestureDetector(
-      onTap: _save,
+      onTap: controller.savePreferences,
       child: Container(
         height: 52,
         decoration: BoxDecoration(

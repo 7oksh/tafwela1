@@ -11,14 +11,19 @@ class OverpassService {
 
   OverpassService(this.dio);
 
-  Future<List<StationModel>> fetchNearbyStations(double lat, double lng) async {
+  Future<List<StationModel>> fetchNearbyStations(
+    double lat,
+    double lng, {
+    double radiusInKm = 10,
+  }) async {
+    final double radiusMeters = radiusInKm * 1000;
     final query =
         '''
 [out:json][timeout:25];
 (
-  node["amenity"="fuel"](around:10000,$lat,$lng);
-  way["amenity"="fuel"](around:10000,$lat,$lng);
-  relation["amenity"="fuel"](around:10000,$lat,$lng);
+  node["amenity"="fuel"](around:$radiusMeters,$lat,$lng);
+  way["amenity"="fuel"](around:$radiusMeters,$lat,$lng);
+  relation["amenity"="fuel"](around:$radiusMeters,$lat,$lng);
 );
 out center;
 ''';
