@@ -8,37 +8,61 @@ class OfflineBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final connected = Get.find<ConnectivityService>().isConnected.value;
+    final connectivity = Get.find<ConnectivityService>();
 
-      return AnimatedSwitcher(
+    return Obx(() {
+      final connected = connectivity.isConnected.value;
+      final lastChecked = connectivity.lastCheckedAt.value;
+
+      return AnimatedSlide(
         duration: const Duration(milliseconds: 300),
-        child: connected
-            ? const SizedBox.shrink(key: ValueKey('online'))
-            : Material(
-                key: const ValueKey('offline'),
-                color: const Color(0xFFE65100),
-                elevation: 2,
-                child: SafeArea(
-                  bottom: false,
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
+        offset: connected ? const Offset(0, -1) : Offset.zero,
+        child: AnimatedOpacity(
+          duration: const Duration(milliseconds: 300),
+          opacity: connected ? 0.0 : 1.0,
+          child: Material(
+            color: const Color(0xFFB71C1C),
+            elevation: 4,
+            child: SafeArea(
+              bottom: false,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.wifi_off,
+                      color: Colors.white,
+                      size: 20,
                     ),
-                    child: Text(
-                      'أنت غير متصل بالإنترنت - البيانات المعروضة قد تكون قديمة',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.cairo(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'لا يوجد اتصال بالإنترنت — يتم عرض آخر بيانات محفوظة',
+                        style: GoogleFonts.cairo(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    Text(
+                      lastChecked,
+                      style: GoogleFonts.cairo(
+                        color: Colors.white70,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+            ),
+          ),
+        ),
       );
     });
   }

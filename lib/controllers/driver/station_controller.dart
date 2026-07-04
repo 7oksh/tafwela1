@@ -11,8 +11,6 @@ import 'package:new_version/utils/exceptions.dart';
 import 'package:new_version/utils/app_snackbar.dart';
 import 'package:new_version/services/search_preferences_service.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:geocoding/geocoding.dart' as geo;
-import 'package:new_version/services/local_database_service.dart';
 
 class StationController extends GetxController {
   StationController({DatabaseService? databaseService})
@@ -248,11 +246,6 @@ class StationController extends GetxController {
       }
 
       stations.assignAll(_withDistance(nearby));
-      
-      if (Get.isRegistered<LocalDatabaseService>()) {
-        await Get.find<LocalDatabaseService>().cacheStations(stations.toList());
-      }
-      
       _applyFilter();
       _applySorting();
 
@@ -261,8 +254,6 @@ class StationController extends GetxController {
       } else {
         selectedStation.value = null;
       }
-
-      _resolveMissingAddressesInBackground();
     } on ApiException catch (e) {
       AppSnackbar.error(e.message);
     } catch (_) {
@@ -302,15 +293,9 @@ class StationController extends GetxController {
       }
 
       stations.assignAll(_withDistance(nearby));
-      
-      if (Get.isRegistered<LocalDatabaseService>()) {
-        await Get.find<LocalDatabaseService>().cacheStations(stations.toList());
-      }
 
       _applyFilter();
       _applySorting();
-
-      _resolveMissingAddressesInBackground();
 
       if (filteredStations.isNotEmpty) {
         selectedStation.value = filteredStations.first;
@@ -434,51 +419,5 @@ class StationController extends GetxController {
     } finally {
       _isUpdatingRoute = false;
     }
-  }
-
-  void _resolveMissingAddressesInBackground() {
-    Future.microtask(() async {
-      final stationsToResolve = stations.where((s) => s.address.trim().isEmpty).toList();
-      
-      for (final s in stationsToResolve) {
-        try {
-          final placemarks = await geo.placemarkFromCoordinates(s.latitude, s.longitude);
-          if (placemarks.isNotEmpty) {
-            final p = placemarks.first;
-            final parts = <String>[];
-            if (p.subLocality?.isNotEmpty == true) parts.add(p.subLocality!);
-            if (p.locality?.isNotEmpty == true) parts.add(p.locality!);
-            
-            var newAddress = parts.join('، ');
-            if (newAddress.isEmpty && p.administrativeArea?.isNotEmpty == true) {
-              newAddress = p.administrativeArea!;
-            }
-            
-            if (newAddress.isNotEmpty) {
-              final index = stations.indexWhere((st) => st.id == s.id);
-              if (index != -1) {
-                final updatedStation = stations[index].copyWith(address: newAddress);
-                stations[index] = updatedStation;
-                
-                final filteredIndex = filteredStations.indexWhere((st) => st.id == s.id);
-                if (filteredIndex != -1) {
-                  filteredStations[filteredIndex] = updatedStation;
-                }
-                
-                if (selectedStation.value?.id == updatedStation.id) {
-                  selectedStation.value = selectedStation.value?.copyWith(address: newAddress);
-                }
-                
-                if (Get.isRegistered<LocalDatabaseService>()) {
-                  Get.find<LocalDatabaseService>().cacheStations([updatedStation]);
-                }
-              }
-            }
-          }
-        } catch (_) {}
-        // Sequential delay to prevent rate-limiting and keep UI smooth
-        await Future.delayed(const Duration(milliseconds: 300));
-      }
-    });
   }
 }
