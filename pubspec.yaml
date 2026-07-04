@@ -64,6 +64,7 @@ dependencies:
   local_auth: ^3.0.1
   dio: ^5.10.0
   flutter_map_tile_caching: ^10.0.0
+  geocoding: ^4.0.0
 
 
 dev_dependencies:

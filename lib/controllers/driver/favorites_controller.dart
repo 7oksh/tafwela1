@@ -2,8 +2,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:new_version/models/station_model.dart';
+import 'package:new_version/controllers/driver/location_controller.dart';
+import 'package:new_version/controllers/driver/station_controller.dart';
 import 'package:new_version/services/connectivity_service.dart';
 import 'package:new_version/services/database_service.dart';
+import 'package:new_version/services/local_database_service.dart';
 
 class FavoritesController extends GetxController {
   FavoritesController({DatabaseService? databaseService})
@@ -30,13 +33,31 @@ class FavoritesController extends GetxController {
       }
       _wasOffline = connected != true;
     });
+    if (Get.isRegistered<LocationController>()) {
+      ever(Get.find<LocationController>().currentPosition, (_) {
+        _updateDistances();
+      });
+    }
+
     _loadIds();
     refreshFavorites();
   }
 
+  void _updateDistances() {
+    if (!Get.isRegistered<LocationController>()) return;
+    if (favoriteStations.isEmpty) return;
+    final location = Get.find<LocationController>();
+    
+    favoriteStations.assignAll(
+      favoriteStations.map((s) => s.copyWith(
+        distanceKm: location.distanceTo(lat: s.latitude, lng: s.longitude),
+      )).toList(),
+    );
+  }
+
   void _loadIds() {
     final stored = _box.read<List<dynamic>>(_key);
-    favoriteIds.assignAll(stored?.map((e) => e.toString()).toList() ?? ['1', '4']);
+    favoriteIds.assignAll(stored?.map((e) => e.toString()).toList() ?? []);
     _persist();
   }
 
@@ -58,15 +79,35 @@ class FavoritesController extends GetxController {
       favoriteIds.remove(id);
     } else {
       favoriteIds.add(id);
+      _cacheStationLocally(id);
     }
     _persist();
     refreshFavorites();
   }
 
+  void _cacheStationLocally(String id) {
+    try {
+      if (Get.isRegistered<StationController>()) {
+        final stationCtrl = Get.find<StationController>();
+        final station = stationCtrl.stations.firstWhere((s) => s.id == id);
+        Get.find<LocalDatabaseService>().cacheStations([station]);
+      }
+    } catch (_) {}
+  }
+
   Future<void> refreshFavorites() async {
-    final result = await _databaseService.fetchStations();
-    favoriteStations.assignAll(
-      result.stations.where((s) => favoriteIds.contains(s.id)).toList(),
-    );
+    final localDb = Get.find<LocalDatabaseService>();
+    final cached = await localDb.getCachedStations();
+    
+    var favs = cached.where((s) => favoriteIds.contains(s.id)).toList();
+    
+    if (Get.isRegistered<LocationController>()) {
+      final location = Get.find<LocationController>();
+      favs = favs.map((s) => s.copyWith(
+        distanceKm: location.distanceTo(lat: s.latitude, lng: s.longitude),
+      )).toList();
+    }
+    
+    favoriteStations.assignAll(favs);
   }
 }

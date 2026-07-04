@@ -80,6 +80,7 @@ Future<void> main() async {
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
   await GetStorage.init('Settings');
+  await GetStorage.init('driver_favorites');
 
   // Initialize async services BEFORE runApp to guarantee dependency order
   await Get.putAsync(() async => ConnectivityService().init(), permanent: true);
