@@ -25,7 +25,7 @@ class NominatimService {
       'limit': '8',
       'addressdetails': '1',
       if (lat != null && lng != null)
-        'viewbox': '${lng! - 0.3},${lat! + 0.3},${lng + 0.3},${lat - 0.3}',
+        'viewbox': '${lng - 0.3},${lat + 0.3},${lng + 0.3},${lat - 0.3}',
       if (lat != null) 'bounded': '0',
     };
 
@@ -54,13 +54,18 @@ class NominatimService {
           ? jsonDecode(response.data)
           : response.data;
 
-      return json
-          .map((e) => PlaceResult.fromJson(e as Map<String, dynamic>))
-          .toList();
+      return await compute(_parseNominatimIsolate, json);
     } catch (e, stackTrace) {
       debugPrint('Nominatim exception: $e');
       debugPrint(stackTrace.toString());
       return []; // Never throw to the UI
     }
   }
+}
+
+/// Pure top-level function for background isolate processing
+List<PlaceResult> _parseNominatimIsolate(List<dynamic> json) {
+  return json
+      .map((e) => PlaceResult.fromJson(e as Map<String, dynamic>))
+      .toList();
 }

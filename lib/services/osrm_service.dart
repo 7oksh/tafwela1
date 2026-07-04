@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:latlong2/latlong.dart';
 
 /// Result returned by [OsrmService.getRoute].
@@ -46,45 +47,46 @@ class OsrmService {
       return OsrmRouteResult(
         distanceMeters: (route['distance'] as num).toDouble(),
         durationSeconds: (route['duration'] as num).toInt(),
-        polyline: _decodePolyline(route['geometry'] as String),
+        polyline: await compute(_decodePolylineIsolate, route['geometry'] as String),
       );
     } catch (_) {
       return null;
     }
   }
+}
 
-  /// Decodes a Google-compatible encoded polyline string into [LatLng] points.
-  static List<LatLng> _decodePolyline(String encoded) {
-    final List<LatLng> points = [];
-    int index = 0;
-    int lat = 0;
-    int lng = 0;
+/// Decodes a Google-compatible encoded polyline string into [LatLng] points.
+/// Pure top-level function for background isolate processing.
+List<LatLng> _decodePolylineIsolate(String encoded) {
+  final List<LatLng> points = [];
+  int index = 0;
+  int lat = 0;
+  int lng = 0;
 
-    while (index < encoded.length) {
-      // Decode latitude
-      int shift = 0;
-      int result = 0;
-      int b;
-      do {
-        b = encoded.codeUnitAt(index++) - 63;
-        result |= (b & 0x1F) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-      lat += (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+  while (index < encoded.length) {
+    // Decode latitude
+    int shift = 0;
+    int result = 0;
+    int b;
+    do {
+      b = encoded.codeUnitAt(index++) - 63;
+      result |= (b & 0x1F) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    lat += (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
 
-      // Decode longitude
-      shift = 0;
-      result = 0;
-      do {
-        b = encoded.codeUnitAt(index++) - 63;
-        result |= (b & 0x1F) << shift;
-        shift += 5;
-      } while (b >= 0x20);
-      lng += (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
+    // Decode longitude
+    shift = 0;
+    result = 0;
+    do {
+      b = encoded.codeUnitAt(index++) - 63;
+      result |= (b & 0x1F) << shift;
+      shift += 5;
+    } while (b >= 0x20);
+    lng += (result & 1) != 0 ? ~(result >> 1) : (result >> 1);
 
-      points.add(LatLng(lat / 1e5, lng / 1e5));
-    }
-
-    return points;
+    points.add(LatLng(lat / 1e5, lng / 1e5));
   }
+
+  return points;
 }

@@ -16,7 +16,7 @@ class OverpassService {
     double lng, {
     double radiusInKm = 10,
   }) async {
-    final double radiusMeters = radiusInKm * 1000;
+    final int radiusMeters = (radiusInKm * 1000).round();
     final query =
         '''
 [out:json][timeout:25];
@@ -42,10 +42,8 @@ out center;
       );
 
       debugPrint('============================');
-      debugPrint('URL: $uri');
-      debugPrint('Status Code: ${response.statusCode}');
-      debugPrint('Body: ${response.data}');
-      debugPrint('============================');
+      debugPrint('Overpass URL: $uri');
+      debugPrint('Overpass Status Code: ${response.statusCode}');
 
       if (response.statusCode != 200) {
         throw Exception(
@@ -59,26 +57,12 @@ out center;
 
       final List elements = json['elements'] ?? [];
 
-      return elements.map<StationModel>((e) {
-        final tags = (e['tags'] as Map<String, dynamic>?) ?? {};
-        final center = (e['center'] as Map<String, dynamic>?);
-        final latitude = ((e['lat'] ?? center?['lat']) as num).toDouble();
-        final longitude = ((e['lon'] ?? center?['lon']) as num).toDouble();
-
-        return StationModel(
-          id: e['id'].toString(),
-          name: tags['name'] ?? 'محطة وقود',
-          address: tags['addr:street'] ?? tags['addr:full'] ?? '',
-          latitude: latitude,
-          longitude: longitude,
-          distanceKm: 0,
-          rating: 0,
-          crowdStatus: CrowdStatus.low,
-          imageUrl: '',
-          fuelTypes: const [],
-          isOpen: true,
-        );
-      }).toList();
+      final stations = await compute(_parseOverpassStations, elements);
+      
+      debugPrint('Overpass Parsed Stations: ${stations.length}');
+      debugPrint('============================');
+      
+      return stations;
     } on DioException catch (e) {
       debugPrint('Overpass DioException: $e');
       throw ApiException(DioExceptionHandler.handle(e));
@@ -88,4 +72,28 @@ out center;
       rethrow;
     }
   }
+}
+
+/// Pure top-level function for background isolate processing
+List<StationModel> _parseOverpassStations(List elements) {
+  return elements.map<StationModel>((e) {
+    final tags = (e['tags'] as Map<String, dynamic>?) ?? {};
+    final center = (e['center'] as Map<String, dynamic>?);
+    final latitude = ((e['lat'] ?? center?['lat']) as num).toDouble();
+    final longitude = ((e['lon'] ?? center?['lon']) as num).toDouble();
+
+    return StationModel(
+      id: e['id'].toString(),
+      name: tags['name'] ?? 'محطة وقود',
+      address: tags['addr:street'] ?? tags['addr:full'] ?? '',
+      latitude: latitude,
+      longitude: longitude,
+      distanceKm: 0,
+      rating: 0,
+      crowdStatus: CrowdStatus.low,
+      imageUrl: '',
+      fuelTypes: const [],
+      isOpen: true,
+    );
+  }).toList();
 }

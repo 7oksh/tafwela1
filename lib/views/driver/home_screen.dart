@@ -302,7 +302,13 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.all(AppSpacing.md),
               itemCount: stations.length,
               separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (_, index) => StationCard(station: stations[index]),
+              itemBuilder: (_, index) {
+                final station = stations[index];
+                return StationCard(
+                  station: station,
+                  onTap: () => _stationController.selectStation(station),
+                );
+              },
             );
           }),
         ),

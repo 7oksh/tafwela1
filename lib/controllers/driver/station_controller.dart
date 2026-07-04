@@ -40,6 +40,7 @@ class StationController extends GetxController {
   final isSearchingPlaces = false.obs;
 
   bool _wasOffline = false;
+  bool _isFetching = false;
 
   @override
   void onInit() {
@@ -47,17 +48,10 @@ class StationController extends GetxController {
     final connectivity = Get.find<ConnectivityService>();
     _wasOffline = !connectivity.isConnected.value;
     ever(connectivity.isConnected, (connected) {
-      if (connected == true && _wasOffline) {
-        loadStations();
-      }
+      // Intentionally empty to prevent auto-fetch on reconnect,
+      // as requested by the architectural constraints.
       _wasOffline = connected != true;
     });
-    
-    ever(_preferences.updateTrigger, (_) {
-      applyPreferencesAndSearch();
-    });
-    
-    loadStations();
   }
 
   Future<void> loadStations() async {
@@ -155,6 +149,7 @@ class StationController extends GetxController {
 
   void selectStation(StationModel station) {
     selectedStation.value = station;
+    loadRouteForStation(station);
   }
 
   void clearSelection() {
@@ -219,48 +214,16 @@ class StationController extends GetxController {
 
   // ── Find the nearest & fastest gas station ────────────────────────────────
 
-  Future<List<StationModel>> _calculateRoutesForStations(
-    List<StationModel> nearby,
-    double userLat,
-    double userLng,
-    LocationController location,
-  ) async {
-    final List<StationModel> routed = [];
-    for (final station in nearby) {
-      final route = await _osrmService.getRoute(
-        userLat,
-        userLng,
-        station.latitude,
-        station.longitude,
-      );
-      if (route != null) {
-        routed.add(
-          station.copyWith(
-            duration: route.durationSeconds,
-            routePolyline: route.polyline,
-            distanceKm: route.distanceMeters / 1000,
-          ),
-        );
-      } else {
-        routed.add(
-          station.copyWith(
-            distanceKm: location.distanceTo(
-              lat: station.latitude,
-              lng: station.longitude,
-            ),
-          ),
-        );
-      }
-    }
-    return routed;
-  }
+
 
   Future<void> applyPreferencesAndSearch() async {
+    if (_isFetching) return;
     if (!Get.isRegistered<LocationController>()) return;
     final location = Get.find<LocationController>();
     final userLat = location.currentLatLng.latitude;
     final userLng = location.currentLatLng.longitude;
 
+    _isFetching = true;
     isLoading.value = true;
     try {
       final radius = _preferences.maxDistance;
@@ -282,13 +245,7 @@ class StationController extends GetxController {
         return;
       }
 
-      final routed = await _calculateRoutesForStations(
-        nearby,
-        userLat,
-        userLng,
-        location,
-      );
-      stations.assignAll(routed);
+      stations.assignAll(_withDistance(nearby));
       _applyFilter();
       _applySorting();
 
@@ -303,23 +260,28 @@ class StationController extends GetxController {
       AppSnackbar.error('حدث خطأ غير متوقع');
     } finally {
       isLoading.value = false;
+      _isFetching = false;
     }
   }
 
   /// Fetches nearby stations from Overpass, calculates driving route via OSRM
   /// for each, sorts by duration, and selects the fastest one.
   Future<void> findFastestNearbyStation() async {
+    if (_isFetching) return;
     if (!Get.isRegistered<LocationController>()) return;
     final location = Get.find<LocationController>();
     final userLat = location.currentLatLng.latitude;
     final userLng = location.currentLatLng.longitude;
 
+    _isFetching = true;
     isFindingFastest.value = true;
     try {
       // 1. Fetch nearby fuel stations from Overpass API
+      final radius = _preferences.maxDistance;
       final nearby = await _overpassService.fetchNearbyStations(
         userLat,
         userLng,
+        radiusInKm: radius,
       );
 
       if (nearby.isEmpty) {
@@ -330,19 +292,7 @@ class StationController extends GetxController {
         return;
       }
 
-      // 2. Get driving route for each station via OSRM
-      final routed = await _calculateRoutesForStations(
-        nearby,
-        userLat,
-        userLng,
-        location,
-      );
-
-      // 3. Sort by driving duration (ascending — fastest first)
-      routed.sort((a, b) => a.duration.compareTo(b.duration));
-
-      // 4. Update reactive state
-      stations.assignAll(routed);
+      stations.assignAll(_withDistance(nearby));
 
       _applyFilter();
       _applySorting();
@@ -358,6 +308,48 @@ class StationController extends GetxController {
       AppSnackbar.error('حدث خطأ غير متوقع');
     } finally {
       isFindingFastest.value = false;
+      _isFetching = false;
+    }
+  }
+
+  /// Lazy route loading for a single station when selected
+  Future<void> loadRouteForStation(StationModel station) async {
+    if (!Get.isRegistered<LocationController>()) return;
+    final location = Get.find<LocationController>();
+    final userLat = location.currentLatLng.latitude;
+    final userLng = location.currentLatLng.longitude;
+
+    isLoading.value = true;
+    try {
+      final route = await _osrmService.getRoute(
+        userLat,
+        userLng,
+        station.latitude,
+        station.longitude,
+      );
+
+      if (route != null) {
+        final updatedStation = station.copyWith(
+          duration: route.durationSeconds,
+          routePolyline: route.polyline,
+          distanceKm: route.distanceMeters / 1000,
+        );
+
+        selectedStation.value = updatedStation;
+
+        final index = stations.indexWhere((s) => s.id == station.id);
+        if (index != -1) {
+          stations[index] = updatedStation;
+          _applyFilter();
+          _applySorting();
+        }
+      } else {
+        selectedStation.value = station;
+      }
+    } catch (_) {
+      AppSnackbar.error('حدث خطأ أثناء جلب المسار');
+    } finally {
+      isLoading.value = false;
     }
   }
 
