@@ -5,6 +5,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:new_version/controllers/driver/location_controller.dart';
 import 'package:new_version/controllers/driver/station_controller.dart';
 import 'package:new_version/utils/constants.dart';
+import 'package:flutter_map_tile_caching/flutter_map_tile_caching.dart';
+import 'package:new_version/services/map_tile_cache_service.dart';
 import 'package:new_version/views/widgets/driver/station_map_pin.dart';
 
 class DriverMapView extends StatelessWidget {
@@ -14,6 +16,7 @@ class DriverMapView extends StatelessWidget {
   Widget build(BuildContext context) {
     final locationCtrl = Get.find<LocationController>();
     final stationCtrl = Get.find<StationController>();
+    final cacheService = Get.find<MapTileCacheService>();
 
     return Obx(() {
       final stations = stationCtrl.filteredStations;
@@ -38,18 +41,15 @@ class DriverMapView extends StatelessWidget {
           point: locationCtrl.currentLatLng,
           width: 50,
           height: 50,
-          child: const Icon(
-            Icons.my_location,
-            color: Colors.blue,
-            size: 35,
-          ),
+          child: const Icon(Icons.my_location, color: Colors.blue, size: 35),
         ),
       );
       // Route polyline for selected station
       final routePoints = selected?.routePolyline ?? [];
 
-      if (locationCtrl.isLocationLoading.value &&
-          locationCtrl.currentPosition.value == null) {
+      if (!cacheService.isReady.value ||
+          (locationCtrl.isLocationLoading.value &&
+              locationCtrl.currentPosition.value == null)) {
         return const Center(
           child: CircularProgressIndicator(color: AppColors.primaryBlue),
         );
@@ -66,9 +66,9 @@ class DriverMapView extends StatelessWidget {
             ),
             children: [
               TileLayer(
-                urlTemplate:
-                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                 userAgentPackageName: 'com.tafwela.app',
+                tileProvider: cacheService.store.getTileProvider(),
               ),
               if (routePoints.isNotEmpty)
                 PolylineLayer(
@@ -98,17 +98,14 @@ class DriverMapView extends StatelessWidget {
                   : AppColors.primaryBlue,
               child: stationCtrl.isFindingFastest.value
                   ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: AppColors.white,
-                ),
-              )
-                  : const Icon(
-                Icons.rocket_launch,
-                color: AppColors.white,
-              ),
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: AppColors.white,
+                      ),
+                    )
+                  : const Icon(Icons.rocket_launch, color: AppColors.white),
             ),
           ),
 
@@ -124,10 +121,7 @@ class DriverMapView extends StatelessWidget {
                 heroTag: 'clearRoute',
                 backgroundColor: Colors.white,
                 onPressed: stationCtrl.clearSelection,
-                child: const Icon(
-                  Icons.close,
-                  color: Colors.red,
-                ),
+                child: const Icon(Icons.close, color: Colors.red),
               );
             }),
           ),

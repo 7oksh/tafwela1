@@ -11,6 +11,7 @@ import 'package:new_version/views/staff/main_view.dart';
 import 'package:new_version/controllers/settings/onboarding_controller.dart';
 import 'package:new_version/controllers/map/map_controller.dart';
 import 'package:new_version/controllers/driver/home_controller.dart';
+import 'package:new_version/services/map_tile_cache_service.dart';
 
 import 'package:new_version/controllers/driver/driver_preferences_controller.dart';
 import 'package:new_version/controllers/staff/staff_controller.dart';
@@ -53,6 +54,8 @@ abstract final class AppRoutes {
       page: () => const DriverMainScreen(),
       binding: BindingsBuilder(() {
         Get.lazyPut(() => HomeController(), fenix: true);
+        // Driver-only map tile cache initialization
+        Get.lazyPut<MapTileCacheService>(() => MapTileCacheService(), fenix: true);
       }),
     ),
     GetPage(
