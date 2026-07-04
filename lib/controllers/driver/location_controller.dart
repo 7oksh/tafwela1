@@ -2,8 +2,9 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:new_version/controllers/driver/station_controller.dart';
 import 'package:new_version/services/location_service.dart';
-import 'package:new_version/controllers/station_controller.dart';
+
 
 class LocationController extends GetxController {
   LocationController({LocationService? locationService})
